@@ -597,6 +597,13 @@ export default function Home() {
                 <tr><td><b>How to read it</b></td><td>&quot;Caught&quot; = the grader failed at least one rubric check on that bad answer. 3 / 3 caught = the grader is reliable.</td></tr>
               </tbody>
             </table>
+            <table className="audit rubric-table" style={{ marginBottom: 14 }}>
+              <thead><tr><th>Two scores, do not confuse them</th><th>What it measures</th><th>Range</th><th>Higher means</th></tr></thead>
+              <tbody>
+                <tr><td><b>Similarity score</b> (RAG search)</td><td>How <b>relevant</b> a policy section is to the case - it picks the input.</td><td>0 to 1</td><td>more likely to be <b>picked</b></td></tr>
+                <tr><td><b>Trust score</b> (here &amp; the scoreboard)</td><td>How <b>correct</b> an answer is against the 4 rubric checks - it grades the output.</td><td>0 to 100%</td><td>more <b>trustworthy</b></td></tr>
+              </tbody>
+            </table>
             <button className="btn-primary" onClick={runDiscrimination} disabled={evalLoading}>
               {evalLoading ? "Running discrimination test..." : "Run discrimination test"}
             </button>
