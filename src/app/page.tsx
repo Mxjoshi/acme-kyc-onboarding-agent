@@ -851,8 +851,7 @@ export default function Home() {
       )}
 
       <footer className="footer">
-        Synthetic data only. No real customers. Acme Bank UAE is fictional. Decisions are explainable and
-        align with CBUAE expectations: every claim is cited, the assistant refuses when policy is silent, and risk is escalated to a human.
+        Synthetic data only. No real customers. Acme Bank UAE is fictional. Built to align with CBUAE expectations for trustworthy AI.
       </footer>
     </div>
   );
