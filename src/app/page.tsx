@@ -555,6 +555,21 @@ export default function Home() {
             <p className="check-reason" style={{ marginTop: 12 }}>Do not confuse this with the trust score: the <b>similarity score here picks the input</b> (which rules go in, 0 to 1, higher = more relevant), while the <b>trust score in Evals grades the output</b> (0 to 100%, higher = more correct). One chooses the rules; the other judges the answer.</p>
           </div>
 
+          <div className="panel">
+            <div className="panel-h">The tech behind it &middot; embeddings, transformers.js, cosine similarity</div>
+            <table className="audit rubric-table">
+              <thead><tr><th>Term</th><th>What it is (plain words)</th><th>In this project</th></tr></thead>
+              <tbody>
+                <tr><td><b>Embedding</b></td><td>Turning a piece of text into a list of numbers that captures its <b>meaning</b>. Text with similar meaning gets similar numbers - so meaning becomes math you can compare.</td><td>&quot;Section 4. Required documents&quot; becomes ~384 numbers; the case query becomes its own ~384 numbers.</td></tr>
+                <tr><td><b>transformers.js</b></td><td>A free software library (the JavaScript version of Hugging Face&apos;s &quot;Transformers&quot;) that <b>runs a small AI model on our own server</b> to produce those embeddings - no internet, no extra API key.</td><td>It is the tool that does the &quot;turn to numbers&quot; step in the flow map above.</td></tr>
+                <tr><td><b>The model</b></td><td>The specific small model transformers.js runs. It is trained to place similar-meaning text close together.</td><td><span className="mono">all-MiniLM-L6-v2</span> - small, fast, runs locally.</td></tr>
+                <tr><td><b>Cosine similarity</b></td><td>The math that measures how close two embeddings point in the same direction. Result is 0 to 1; higher = more alike in meaning.</td><td>It produces the <b>score</b> in the results table (e.g. 0.641).</td></tr>
+                <tr><td><b>Why local, not a cloud call</b></td><td>Embeddings here are computed on our own server instead of a paid API.</td><td>Free, works offline, and Anthropic (Claude) has no embeddings API - so transformers.js fills that gap. Claude is still used for the decision and the judge.</td></tr>
+              </tbody>
+            </table>
+            <p className="check-reason" style={{ marginTop: 12 }}>The clean split: <b>transformers.js finds the relevant rules</b> (the search/meaning step), then <b>Claude reasons and writes the cited decision</b> (the language step). Different tools, different jobs.</p>
+          </div>
+
           {retr && (
             <div className="panel">
               <div className="panel-h">Result &middot; {retr.name}</div>
