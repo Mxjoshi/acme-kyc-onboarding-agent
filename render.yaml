@@ -1,0 +1,16 @@
+# Render blueprint - one file that tells Render how to run this app.
+# In Render: New + -> Blueprint -> connect this repo -> it reads this file.
+# The only thing you set by hand is the secret API key (sync: false below) in the dashboard.
+services:
+  - type: web
+    name: acme-kyc-onboarding-agent
+    runtime: node
+    plan: free
+    region: frankfurt # closest Render region to the UAE
+    buildCommand: npm install && npm run build
+    startCommand: npm run start # next start reads PORT from the env and binds 0.0.0.0 automatically
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false # you paste the key in the Render dashboard; it is never stored in git
+      - key: NODE_VERSION
+        value: "20.18.0"
