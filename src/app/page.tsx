@@ -501,6 +501,24 @@ export default function Home() {
         <div className="page">
           <div className="panel">
             <div className="panel-h">Policy search (RAG) - the step before the agent decides</div>
+            <div className="rmap">
+              {[
+                { ic: "📋", lb: "Case → query", tc: "the customer's facts" },
+                { ic: "🔢", lb: "Turn to numbers", tc: "embeddings · transformers.js" },
+                { ic: "📐", lb: "Compare by meaning", tc: "cosine similarity" },
+                { ic: "✅", lb: "Keep top 7", tc: "drop the rest", core: true },
+                { ic: "🤖", lb: "Send to agent", tc: "only these rules", core: true },
+              ].map((s, i, a) => (
+                <div key={i} className="rmap-cell">
+                  <div className={`rmap-step${s.core ? " core" : ""}`}>
+                    <span className="rmap-ic">{s.ic}</span>
+                    <span className="rmap-lb">{s.lb}</span>
+                    <span className="rmap-tc">{s.tc}</span>
+                  </div>
+                  {i < a.length - 1 && <span className="rmap-arrow">→</span>}
+                </div>
+              ))}
+            </div>
             <table className="audit rubric-table" style={{ marginBottom: 14 }}>
               <tbody>
                 <tr><td><b>What this is</b></td><td>RAG = retrieval-augmented generation. Before the AI decides, we FIND the few policy sections that actually relate to the case and give it ONLY those. The AI never answers from memory.</td></tr>
@@ -519,6 +537,22 @@ export default function Home() {
                 {retrLoading ? "Searching the policy..." : "Run policy search"}
               </button>
             </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-h">How to read the result &middot; which word means what</div>
+            <table className="audit rubric-table">
+              <thead><tr><th>Word on screen</th><th>What it really means</th><th>Example (Omar)</th></tr></thead>
+              <tbody>
+                <tr><td><b>Query</b></td><td>The case turned into one search sentence. This is what we search the policy with.</td><td>&quot;Onboarding decision. Resident newcomer... documents provided... AML risk, escalation...&quot;</td></tr>
+                <tr><td><b>Policy section</b></td><td>One chunk of the bank rulebook (the policy is split into 9).</td><td>&quot;Section 4. Required documents&quot;</td></tr>
+                <tr><td><b>Match (similarity) / score</b></td><td>How close that section is to the query in <b>meaning</b>, from 0 to 1. Higher = more relevant. It is NOT a percentage of correctness - it is a closeness number.</td><td>0.641 = closest; 0.346 = barely related</td></tr>
+                <tr><td><b>The bar</b></td><td>Just a picture of that score. Longer/greener = higher.</td><td>full green bar for 0.641</td></tr>
+                <tr><td><b>used</b> (green)</td><td>This section scored high enough (top 7) to be handed to the AI. The AI may only use these.</td><td>Sections 1, 4, 3, 6, 5, 8, 2</td></tr>
+                <tr><td><b>dropped</b> (grey)</td><td>Scored too low, so it is left out. The AI never sees it.</td><td>Section 9 and Section 7</td></tr>
+              </tbody>
+            </table>
+            <p className="check-reason" style={{ marginTop: 12 }}>Do not confuse this with the trust score: the <b>similarity score here picks the input</b> (which rules go in, 0 to 1, higher = more relevant), while the <b>trust score in Evals grades the output</b> (0 to 100%, higher = more correct). One chooses the rules; the other judges the answer.</p>
           </div>
 
           {retr && (

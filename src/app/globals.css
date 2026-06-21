@@ -283,3 +283,15 @@ body {
 .pmap-detail p { margin: 0; font-size: 13.5px; color: #334155; line-height: 1.55; }
 .btn-ghost { margin-top: 9px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--brand); background: #fff; border: 1px solid var(--brand); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
 .btn-ghost:hover { background: #eff6ff; }
+
+/* RAG flow mini-map (static, inside the RAG search view) */
+.rmap { display: flex; flex-wrap: wrap; align-items: stretch; gap: 4px; margin: 4px 0 14px; }
+.rmap-cell { display: flex; align-items: center; gap: 4px; }
+.rmap-step { display: flex; flex-direction: column; align-items: center; gap: 3px; background: var(--soft);
+  border: 1.5px solid var(--line); border-radius: 11px; padding: 10px 11px; min-width: 112px; text-align: center; }
+.rmap-step.core { border-color: #86efac; background: var(--green-bg); }
+.rmap-ic { font-size: 20px; line-height: 1; }
+.rmap-lb { font-size: 12px; font-weight: 700; color: var(--ink); }
+.rmap-tc { font-size: 10px; color: var(--muted); font-family: ui-monospace, Menlo, monospace; }
+.rmap-step.core .rmap-tc { color: var(--green); }
+.rmap-arrow { color: var(--brand); font-size: 16px; font-weight: 700; }
