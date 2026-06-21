@@ -540,40 +540,88 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="panel">
-            <div className="panel-h">How to read the result &middot; which word means what</div>
-            <table className="audit rubric-table">
-              <thead><tr><th>Word on screen</th><th>What it really means</th><th>Example (Omar)</th></tr></thead>
-              <tbody>
-                <tr><td><b>Query</b></td><td>The case turned into one search sentence. This is what we search the policy with.</td><td>&quot;Onboarding decision. Resident newcomer... documents provided... AML risk, escalation...&quot;</td></tr>
-                <tr><td><b>Policy section</b></td><td>One chunk of the bank rulebook (the policy is split into 9).</td><td>&quot;Section 4. Required documents&quot;</td></tr>
-                <tr><td><b>Match (similarity) / score</b></td><td>How close that section is to the query in <b>meaning</b>, from 0 to 1. Higher = more relevant. It is NOT a percentage of correctness - it is a closeness number.</td><td>0.641 = closest; 0.346 = barely related</td></tr>
-                <tr><td><b>The bar</b></td><td>Just a picture of that score. Longer/greener = higher.</td><td>full green bar for 0.641</td></tr>
-                <tr><td><b>used</b> (green)</td><td>This section scored high enough (top 7) to be handed to the AI. The AI may only use these.</td><td>Sections 1, 4, 3, 6, 5, 8, 2</td></tr>
-                <tr><td><b>dropped</b> (grey)</td><td>Scored too low, so it is left out. The AI never sees it.</td><td>Section 9 and Section 7</td></tr>
-              </tbody>
-            </table>
-            <p className="check-reason" style={{ marginTop: 12 }}>Do not confuse this with the trust score: the <b>similarity score here picks the input</b> (which rules go in, 0 to 1, higher = more relevant), while the <b>trust score in Evals grades the output</b> (0 to 100%, higher = more correct). One chooses the rules; the other judges the answer.</p>
-          </div>
-
-          <div className="panel">
-            <div className="panel-h">The tech behind it &middot; embeddings, transformers.js, cosine similarity</div>
-            <table className="audit rubric-table">
-              <thead><tr><th>Term</th><th>What it is (plain words)</th><th>In this project</th></tr></thead>
-              <tbody>
-                <tr><td><b>Embedding</b></td><td>Turning a piece of text into a list of numbers that captures its <b>meaning</b>. Text with similar meaning gets similar numbers - so meaning becomes math you can compare.</td><td>&quot;Section 4. Required documents&quot; becomes ~384 numbers; the case query becomes its own ~384 numbers.</td></tr>
-                <tr><td><b>transformers.js</b></td><td>A free software library (the JavaScript version of Hugging Face&apos;s &quot;Transformers&quot;) that <b>runs a small AI model on our own server</b> to produce those embeddings - no internet, no extra API key.</td><td>It is the tool that does the &quot;turn to numbers&quot; step in the flow map above.</td></tr>
-                <tr><td><b>The model</b></td><td>The specific small model transformers.js runs. It is trained to place similar-meaning text close together.</td><td><span className="mono">all-MiniLM-L6-v2</span> - small, fast, runs locally.</td></tr>
-                <tr><td><b>Cosine similarity</b></td><td>The math that measures how close two embeddings point in the same direction. Result is 0 to 1; higher = more alike in meaning.</td><td>It produces the <b>score</b> in the results table (e.g. 0.641).</td></tr>
-                <tr><td><b>Why local, not a cloud call</b></td><td>Embeddings here are computed on our own server instead of a paid API.</td><td>Free, works offline, and Anthropic (Claude) has no embeddings API - so transformers.js fills that gap. Claude is still used for the decision and the judge.</td></tr>
-              </tbody>
-            </table>
-            <p className="check-reason" style={{ marginTop: 12 }}>The clean split: <b>transformers.js finds the relevant rules</b> (the search/meaning step), then <b>Claude reasons and writes the cited decision</b> (the language step). Different tools, different jobs.</p>
-          </div>
+          {retr && (
+            <div className="panel">
+              <div className="panel-h">Similarity map &middot; {retr.name} &middot; sections inside the green ring were kept</div>
+              <div className="simmap-wrap">
+                <div className="simmap">
+                  {(() => {
+                    const cx = 175, cy = 165, minR = 40, maxR = 140;
+                    const secs = retr.sections;
+                    const scores = secs.map((s: any) => s.score);
+                    const max = Math.max(...scores), min = Math.min(...scores);
+                    const pts = secs.map((s: any, i: number) => {
+                      const norm = max === min ? 0.5 : (s.score - min) / (max - min); // 1 = closest
+                      const r = minR + (1 - norm) * (maxR - minR);
+                      const ang = i * (2 * Math.PI / secs.length) - Math.PI / 2;
+                      const num = (String(s.section).match(/\d+/) || ["?"])[0];
+                      return { r, x: cx + r * Math.cos(ang), y: cy + r * Math.sin(ang), num, ...s };
+                    });
+                    // cut-off ring sits between the last kept section and the first dropped one.
+                    const k = retr.top_k;
+                    const cutoffR = (k < pts.length) ? (pts[k - 1].r + pts[k].r) / 2 : maxR + 10;
+                    return (
+                      <svg viewBox="0 0 350 340" role="img" aria-label="similarity map">
+                        {/* kept zone */}
+                        <circle cx={cx} cy={cy} r={cutoffR} fill="var(--green)" opacity={0.08} />
+                        <circle cx={cx} cy={cy} r={cutoffR} fill="none" stroke="var(--green)" strokeWidth={1.5} strokeDasharray="5 4" />
+                        <text x={cx} y={cy - cutoffR - 7} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--green)">cut-off: top {k} kept</text>
+                        {/* spokes to kept dots */}
+                        {pts.filter((p: any) => p.used).map((p: any, i: number) => (
+                          <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="var(--green)" strokeWidth={1} opacity={0.3} />
+                        ))}
+                        {/* dots */}
+                        {pts.map((p: any, i: number) => (
+                          <g key={i} style={{ cursor: "pointer" }} onClick={() => setMapSel(p)}>
+                            {mapSel && mapSel.section === p.section && <circle cx={p.x} cy={p.y} r={p.used ? 14 : 12} fill="none" stroke="var(--brand)" strokeWidth={2} />}
+                            <circle cx={p.x} cy={p.y} r={p.used ? 11 : 9} fill={p.used ? "var(--green)" : "var(--muted)"} opacity={p.used ? 1 : 0.5} />
+                            <text x={p.x} y={p.y + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#fff" style={{ pointerEvents: "none" }}>{p.num}</text>
+                            <title>{p.section} - similarity {p.score.toFixed(3)} ({p.used ? "kept" : "dropped"})</title>
+                          </g>
+                        ))}
+                        {/* the case at the centre */}
+                        <circle cx={cx} cy={cy} r={15} fill="#0b2545" />
+                        <text x={cx} y={cy + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#f6c453">case</text>
+                      </svg>
+                    );
+                  })()}
+                </div>
+                {/* the key: which number is which section */}
+                <div className="simmap-key">
+                  <div className="simmap-key-h">What each number is (click a row or dot)</div>
+                  {retr.sections.map((s: any) => {
+                    const num = (String(s.section).match(/\d+/) || ["?"])[0];
+                    const name = String(s.section).replace(/^Section\s*\d+\.?\s*/i, "");
+                    const on = mapSel && mapSel.section === s.section;
+                    return (
+                      <button key={s.rank} className={`simmap-key-row${on ? " on" : ""}`} onClick={() => setMapSel({ ...s, num })}>
+                        <span className="simmap-num" style={{ background: s.used ? "var(--green)" : "var(--muted)" }}>{num}</span>
+                        <span className="simmap-nm">{name}</span>
+                        <span className="simmap-sc">{s.score.toFixed(3)}</span>
+                        <span className={`chip ${s.used ? "green" : "gray"}`} style={{ fontSize: 10 }}>{s.used ? "kept" : "dropped"}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {mapSel ? (
+                <div className="cite" style={{ marginTop: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <b>{mapSel.section}</b>
+                    <span className="muted-sm">similarity {mapSel.score.toFixed(3)}</span>
+                    <span className={`chip ${mapSel.used ? "green" : "gray"}`}>{mapSel.used ? "kept" : "dropped"}</span>
+                  </div>
+                  <pre className="cite-src" style={{ whiteSpace: "pre-wrap" }}>{mapSel.text}</pre>
+                </div>
+              ) : (
+                <p className="check-reason" style={{ marginTop: 12 }}>How to read it: the <b>navy dot is the case</b>. Every other dot is a policy section, placed by how close it is in meaning - <b>closer to the centre = more relevant</b>. Sections inside the dashed green ring (the top {retr.top_k}) are kept and sent to the agent; the rest are dropped. <b>Click any dot or row to read that section&apos;s full rule.</b></p>
+              )}
+            </div>
+          )}
 
           {retr && (
             <div className="panel">
-              <div className="panel-h">Result &middot; {retr.name}</div>
+              <div className="panel-h">The same result as a table</div>
               <p className="check-reason" style={{ marginBottom: 6 }}>The case was turned into this search query, then matched against all {retr.total} policy sections:</p>
               <pre className="cite-src" style={{ whiteSpace: "pre-wrap", marginBottom: 14 }}>{retr.query}</pre>
               <table className="audit">
@@ -599,62 +647,35 @@ export default function Home() {
             </div>
           )}
 
-          {retr && (
-            <div className="panel">
-              <div className="panel-h">Similarity map &middot; each dot is a policy section; closer to the centre = closer in meaning</div>
-              <div className="simmap">
-                {(() => {
-                  const cx = 190, cy = 158, minR = 36, maxR = 132;
-                  const scores = retr.sections.map((s: any) => s.score);
-                  const max = Math.max(...scores), min = Math.min(...scores);
-                  const pts = retr.sections.map((s: any, i: number) => {
-                    const norm = max === min ? 0.5 : (s.score - min) / (max - min); // 1 = closest
-                    const r = minR + (1 - norm) * (maxR - minR);
-                    const ang = i * (2 * Math.PI / retr.sections.length) - Math.PI / 2;
-                    const num = (String(s.section).match(/\d+/) || ["?"])[0];
-                    return { x: cx + r * Math.cos(ang), y: cy + r * Math.sin(ang), num, ...s };
-                  });
-                  return (
-                    <svg viewBox="0 0 380 316" role="img" aria-label="similarity map">
-                      {[maxR, (minR + maxR) / 2, minR].map((r, i) => (
-                        <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke="var(--line)" strokeDasharray="3 4" />
-                      ))}
-                      {pts.filter((p: any) => p.used).map((p: any, i: number) => (
-                        <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="var(--green)" strokeWidth={1} opacity={0.35} />
-                      ))}
-                      {pts.map((p: any, i: number) => (
-                        <g key={i} style={{ cursor: "pointer" }} onClick={() => setMapSel(p)}>
-                          {mapSel && mapSel.section === p.section && <circle cx={p.x} cy={p.y} r={p.used ? 13 : 11} fill="none" stroke="var(--brand)" strokeWidth={2} />}
-                          <circle cx={p.x} cy={p.y} r={p.used ? 9 : 7} fill={p.used ? "var(--green)" : "var(--muted)"} opacity={p.used ? 1 : 0.55} />
-                          <text x={p.x} y={p.y + 3.5} textAnchor="middle" fontSize="10" fontWeight="700" fill="#fff" style={{ pointerEvents: "none" }}>{p.num}</text>
-                          <title>{p.section} - similarity {p.score.toFixed(3)} ({p.used ? "used" : "dropped"})</title>
-                        </g>
-                      ))}
-                      <circle cx={cx} cy={cy} r={13} fill="#0b2545" />
-                      <text x={cx} y={cy + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#f6c453">case</text>
-                    </svg>
-                  );
-                })()}
-              </div>
-              <div className="simmap-legend">
-                <span><i style={{ background: "#0b2545" }} />the case (query)</span>
-                <span><i style={{ background: "var(--green)" }} />used (top {retr.top_k})</span>
-                <span><i style={{ background: "var(--muted)" }} />dropped</span>
-              </div>
-              {mapSel ? (
-                <div className="cite" style={{ marginTop: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                    <b>{mapSel.section}</b>
-                    <span className="muted-sm">similarity {mapSel.score.toFixed(3)}</span>
-                    <span className={`chip ${mapSel.used ? "green" : "gray"}`}>{mapSel.used ? "used" : "dropped"}</span>
-                  </div>
-                  <pre className="cite-src" style={{ whiteSpace: "pre-wrap" }}>{mapSel.text}</pre>
-                </div>
-              ) : (
-                <p className="check-reason" style={{ marginTop: 10 }}>The number in each dot is its policy section. Dots near the centre matched the case most closely, so they were kept and sent to the agent; dots near the edge were the least related and were dropped. <b>Click any dot to read that section&apos;s full rule.</b></p>
-              )}
-            </div>
-          )}
+          <div className="panel">
+            <div className="panel-h">Reference &middot; which word means what</div>
+            <table className="audit rubric-table">
+              <thead><tr><th>Word on screen</th><th>What it really means</th><th>Example (Omar)</th></tr></thead>
+              <tbody>
+                <tr><td><b>Query</b></td><td>The case turned into one search sentence. This is what we search the policy with.</td><td>&quot;Onboarding decision. Resident newcomer... documents provided... AML risk, escalation...&quot;</td></tr>
+                <tr><td><b>Policy section</b></td><td>One chunk of the bank rulebook (the policy is split into 9).</td><td>&quot;Section 4. Required documents&quot;</td></tr>
+                <tr><td><b>Match (similarity) / score</b></td><td>How close that section is to the query in <b>meaning</b>, from 0 to 1. Higher = more relevant. It is NOT a percentage of correctness - it is a closeness number.</td><td>0.641 = closest; 0.346 = barely related</td></tr>
+                <tr><td><b>used / kept</b> (green)</td><td>This section scored high enough (top 7) to be handed to the AI. The AI may only use these.</td><td>Sections 1, 4, 3, 6, 5, 8, 2</td></tr>
+                <tr><td><b>dropped</b> (grey)</td><td>Scored too low, so it is left out. The AI never sees it.</td><td>Section 9 and Section 7</td></tr>
+              </tbody>
+            </table>
+            <p className="check-reason" style={{ marginTop: 12 }}>Do not confuse this with the trust score: the <b>similarity score here picks the input</b> (which rules go in, 0 to 1, higher = more relevant), while the <b>trust score in Evals grades the output</b> (0 to 100%, higher = more correct). One chooses the rules; the other judges the answer.</p>
+          </div>
+
+          <div className="panel">
+            <div className="panel-h">The tech behind it &middot; embeddings, transformers.js, cosine similarity</div>
+            <table className="audit rubric-table">
+              <thead><tr><th>Term</th><th>What it is (plain words)</th><th>In this project</th></tr></thead>
+              <tbody>
+                <tr><td><b>Embedding</b></td><td>Turning a piece of text into a list of numbers that captures its <b>meaning</b>. Text with similar meaning gets similar numbers - so meaning becomes math you can compare.</td><td>&quot;Section 4. Required documents&quot; becomes ~384 numbers; the case query becomes its own ~384 numbers.</td></tr>
+                <tr><td><b>transformers.js</b></td><td>A free software library (the JavaScript version of Hugging Face&apos;s &quot;Transformers&quot;) that <b>runs a small AI model on our own server</b> to produce those embeddings - no internet, no extra API key.</td><td>It is the tool that does the &quot;turn to numbers&quot; step in the flow map above.</td></tr>
+                <tr><td><b>The model</b></td><td>The specific small model transformers.js runs. It is trained to place similar-meaning text close together.</td><td><span className="mono">all-MiniLM-L6-v2</span> - small, fast, runs locally.</td></tr>
+                <tr><td><b>Cosine similarity</b></td><td>The math that measures how close two embeddings point in the same direction. Result is 0 to 1; higher = more alike in meaning.</td><td>It produces the <b>score</b> on the map and in the table (e.g. 0.641).</td></tr>
+                <tr><td><b>Why local, not a cloud call</b></td><td>Embeddings here are computed on our own server instead of a paid API.</td><td>Free, works offline, and Anthropic (Claude) has no embeddings API - so transformers.js fills that gap. Claude is still used for the decision and the judge.</td></tr>
+              </tbody>
+            </table>
+            <p className="check-reason" style={{ marginTop: 12 }}>The clean split: <b>transformers.js finds the relevant rules</b> (the search/meaning step), then <b>Claude reasons and writes the cited decision</b> (the language step). Different tools, different jobs.</p>
+          </div>
         </div>
       )}
 
