@@ -96,6 +96,15 @@ const NAV_LABELS: Record<string, string> = Object.fromEntries(
   NAV_GROUPS.flatMap((g) => g.items.map((i) => [i.id, i.label]))
 );
 
+// The 4 rubric checks, with friendly icon + short label, used by the Trust layer visuals.
+const RUBRIC_ORDER = ["grounded_citations", "honest_refusal", "no_hallucination", "correct_action"];
+const CHECK_META: Record<string, { icon: string; short: string; what: string; fail: string }> = {
+  grounded_citations: { icon: "🔗", short: "Cited", what: "Every claim is backed by a cited policy section that actually says it.", fail: "Cites a section that does not support the claim, or makes a claim with no citation." },
+  honest_refusal: { icon: "✋", short: "Refuses", what: "Refuses or escalates when the policy does not cover the case, and does not over-refuse when it does.", fail: "Confidently approves a tourist/remote case the policy never addresses." },
+  no_hallucination: { icon: "🚫", short: "No made-up", what: "Invents no rule, fee, threshold, document, or section.", fail: "States an 'AED 5,000 minimum salary' that appears nowhere in the policy." },
+  correct_action: { icon: "🎯", short: "Right action", what: "The recommendation matches the policy and the escalation rules.", fail: "Proceeds when a required document is missing, or auto-approves a sanctions match." },
+};
+
 // The pipeline map shown on the Dashboard. Click a step to read what it does.
 const PIPELINE = [
   { icon: "📂", label: "Documents in", tech: "input", core: false,
@@ -697,92 +706,107 @@ export default function Home() {
       {view === "evals" && (
         <div className="page">
           <div className="panel">
-            <div className="panel-h">The trust layer (evals)</div>
-            <table className="audit rubric-table" style={{ marginBottom: 14 }}>
-              <tbody>
-                <tr><td><b>What this is</b></td><td>A test of the grader itself. The assistant already grades every onboarding answer (the Trust scoreboard). This checks whether that grader can be trusted.</td></tr>
-                <tr><td><b>Why it matters</b></td><td>A grader that only passes good answers is useless. To trust it, we must prove it also catches BAD answers.</td></tr>
-                <tr><td><b>How it works</b></td><td>We hand the grader three answers we deliberately broke, each with one planted flaw. A good grader marks each as failing.</td></tr>
-                <tr><td><b>How to read it</b></td><td>&quot;Caught&quot; = the grader failed at least one rubric check on that bad answer. 3 / 3 caught = the grader is reliable.</td></tr>
-              </tbody>
-            </table>
-            <table className="audit rubric-table" style={{ marginBottom: 14 }}>
-              <thead><tr><th>Two scores, do not confuse them</th><th>What it measures</th><th>Range</th><th>Higher means</th></tr></thead>
-              <tbody>
-                <tr><td><b>Similarity score</b> (Policy search / RAG)</td><td>How <b>relevant</b> a policy section is to the case - it picks the input.</td><td>0 to 1</td><td>more likely to be <b>picked</b></td></tr>
-                <tr><td><b>Trust score</b> (here &amp; the scoreboard)</td><td>How <b>correct</b> an answer is against the 4 rubric checks - it grades the output.</td><td>0 to 100%</td><td>more <b>trustworthy</b></td></tr>
-              </tbody>
-            </table>
-            <button className="btn-primary" onClick={runDiscrimination} disabled={evalLoading}>
-              {evalLoading ? "Running discrimination test..." : "Run discrimination test"}
-            </button>
+            <div className="panel-h">Trust layer - does the grader actually catch bad answers?</div>
+            <div className="rmap">
+              {[
+                { ic: "📝", lb: "An answer to grade", tc: "from onboarding, or a planted fake" },
+                { ic: "⚖️", lb: "Judge re-reads policy + answer", tc: "a 2nd Claude call", core: true },
+                { ic: "✅", lb: "Marks the 4 checks", tc: "pass / fail each", core: true },
+                { ic: "📊", lb: "Score + root cause", tc: "% passed, RCA tag" },
+              ].map((s, i, a) => (
+                <div key={i} className="rmap-cell">
+                  <div className={`rmap-step${s.core ? " core" : ""}`}>
+                    <span className="rmap-ic">{s.ic}</span>
+                    <span className="rmap-lb">{s.lb}</span>
+                    <span className="rmap-tc">{s.tc}</span>
+                  </div>
+                  {i < a.length - 1 && <span className="rmap-arrow">→</span>}
+                </div>
+              ))}
+            </div>
+            <p className="check-reason" style={{ marginBottom: 12 }}>A grader that only passes good answers is useless. The discrimination test hands the grader <b>three answers we deliberately broke</b> (each with one planted flaw); a trustworthy grader should catch all three.</p>
+            <details className="ragabout">
+              <summary>New to this? What it is and how to read it</summary>
+              <table className="audit rubric-table" style={{ marginTop: 10 }}>
+                <tbody>
+                  <tr><td><b>What this is</b></td><td>A test of the grader itself. The assistant already grades every onboarding answer (the Trust scoreboard). This checks whether that grader can be trusted.</td></tr>
+                  <tr><td><b>Why it matters</b></td><td>To trust a grader, we must prove it also catches BAD answers, not just passes good ones.</td></tr>
+                  <tr><td><b>How to read it</b></td><td>&quot;Caught&quot; = the grader failed at least one rubric check on that bad answer. 3 / 3 caught = the grader is reliable. For these fakes, more failures is good.</td></tr>
+                </tbody>
+              </table>
+            </details>
+            <div className="run-row" style={{ marginTop: 14 }}>
+              <button className="btn-primary" onClick={runDiscrimination} disabled={evalLoading}>
+                {evalLoading ? "Running discrimination test..." : "Run discrimination test"}
+              </button>
+            </div>
           </div>
 
           {evals && (
-            <div className="panel scoreboard">
+            <div className="panel">
               <div className="panel-h">Result</div>
-              <div className="score-line">
+              <div className="score-line" style={{ marginBottom: 14 }}>
                 <span className="score-big" style={{ color: evals.caught === evals.total ? "var(--green)" : "var(--red)" }}>{evals.caught}/{evals.total}</span>
                 {evals.caught === evals.total
                   ? <span className="chip green">rubric proven - every bad answer caught</span>
                   : <span className="chip red">a bad answer slipped through</span>}
               </div>
-              <table className="audit" style={{ marginTop: 10 }}>
-                <thead><tr><th>Test case</th><th>What the fake answer claimed</th><th>Why it&apos;s wrong</th><th>Result (caught by failing)</th><th>Rubric checks</th></tr></thead>
-                <tbody>
-                  {evals.cases.map((c: any, i: number) => {
-                    const total = c.per_check.length; const passed = total - c.failed_checks.length;
-                    return (
-                    <tr key={i}>
-                      <td><b>{c.name}</b></td>
-                      <td className="muted-sm">{c.claimed}</td>
-                      <td className="muted-sm">{c.flaw}</td>
-                      <td>
-                        <span className={`chip ${c.caught ? "green" : "red"}`}>{c.caught ? "CAUGHT" : "MISSED"}</span>
-                        <div style={{ marginTop: 6 }}>{c.failed_checks.map((f: string) => <span key={f} className="chip red" style={{ fontSize: 10, marginRight: 4, marginBottom: 4, display: "inline-block" }}>{f}</span>)}</div>
-                      </td>
-                      <td><b>{c.failed_checks.length}</b> of {total} failed<div className="muted-sm">({passed} passed)</div></td>
-                    </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              <p className="check-reason" style={{ marginTop: 10 }}>Read it like this: each row is a fake answer with one planted flaw. There are 4 rubric checks; the grader fails the ones the answer breaks. <b>Failing even one = CAUGHT.</b> For these deliberately-bad answers, <b>more failures is good</b> - it means the grader is strict. (The Onboarding Trust scoreboard is the opposite: a real answer should pass all 4.)</p>
+              <div className="eval-cards">
+                {evals.cases.map((c: any, i: number) => (
+                  <div key={i} className={`eval-card ${c.caught ? "caught" : "missed"}`}>
+                    <div className="eval-card-h">
+                      <b>{c.name}</b>
+                      <span className={`caught-stamp ${c.caught ? "" : "miss"}`}>{c.caught ? "CAUGHT" : "MISSED"}</span>
+                    </div>
+                    <div className="eval-claim"><b>Fake answer claimed:</b> {c.claimed}</div>
+                    <div className="eval-flaw"><b>Why it is wrong:</b> {c.flaw}</div>
+                    <div className="checkdots">
+                      {RUBRIC_ORDER.map((id) => {
+                        const chk = c.per_check.find((p: any) => p.check_id === id);
+                        const passed = chk?.passed;
+                        const meta = CHECK_META[id];
+                        return (
+                          <div key={id} className={`cdot ${passed ? "pass" : "fail"}`} title={`${id}: ${chk?.reason ?? ""}`}>
+                            <b>{passed ? "PASS" : "FAIL"}</b>
+                            <span>{meta.short}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="eval-verdict">{c.failed_checks.length} of 4 checks failed, so the grader flagged it.</div>
+                  </div>
+                ))}
+              </div>
+              <p className="check-reason" style={{ marginTop: 12 }}>For these deliberately-bad answers, <b>more failures is good</b> - it means the grader is strict. (The Onboarding Trust scoreboard is the opposite: a real answer should pass all 4.)</p>
             </div>
           )}
 
           <div className="panel">
-            <div className="panel-h">The rubric (every answer is checked against these)</div>
-            <table className="audit rubric-table">
-              <thead><tr><th>Check</th><th>What it verifies</th><th>Why it matters</th><th>A failure looks like</th></tr></thead>
-              <tbody>
-                <tr>
-                  <td><b>grounded_citations</b></td>
-                  <td>Every claim is backed by a cited policy section that actually says it.</td>
-                  <td>An officer or regulator must be able to trace every statement to the source.</td>
-                  <td>Cites a section that does not support the claim, or makes a claim with no citation.</td>
-                </tr>
-                <tr>
-                  <td><b>honest_refusal</b></td>
-                  <td>Refuses or escalates when the policy does not cover the case; does not refuse when it does.</td>
-                  <td>A confident answer to an uncovered case is a compliance risk; needless refusals waste time.</td>
-                  <td>Confidently approves a tourist/remote case the policy never addresses.</td>
-                </tr>
-                <tr>
-                  <td><b>no_hallucination</b></td>
-                  <td>Invents no rule, fee, threshold, document, or section.</td>
-                  <td>Made-up rules in KYC/AML are dangerous and can breach regulation.</td>
-                  <td>States an &quot;AED 5,000 minimum salary&quot; that appears nowhere in the policy.</td>
-                </tr>
-                <tr>
-                  <td><b>correct_action</b></td>
-                  <td>The recommendation matches the policy and the escalation rules.</td>
-                  <td>The final action (proceed / request documents / escalate) is what affects the customer.</td>
-                  <td>Proceeds when a required document is missing, or auto-approves a sanctions match.</td>
-                </tr>
-              </tbody>
-            </table>
-            <p className="check-reason" style={{ marginTop: 12 }}>How it is graded: a second Claude call (the LLM judge) reads the bank policy, the case, and the assistant&apos;s answer, then marks each check pass/fail with a reason and tags the root cause of any failure (bad_retrieval / bad_generation / ambiguous_input). The same rubric runs on every decision in Onboarding (the Trust scoreboard); the &quot;Break it&quot; toggle there forces a failure so you can watch it get caught live.</p>
+            <div className="panel-h">The rubric - the 4 checks every answer must pass</div>
+            <div className="rubric-cards">
+              {RUBRIC_ORDER.map((id) => {
+                const m = CHECK_META[id];
+                return (
+                  <div key={id} className="rubric-card">
+                    <div className="rc-ico">{m.icon}</div>
+                    <div className="rc-id">{id}</div>
+                    <div className="rc-what">{m.what}</div>
+                    <div className="rc-fail"><b>Fails when:</b> {m.fail}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <details className="ragabout" style={{ marginTop: 14 }}>
+              <summary>Reference &middot; how it is graded, and the two different scores</summary>
+              <p className="check-reason" style={{ margin: "10px 14px" }}>A second Claude call (the LLM judge) reads the bank policy, the case, and the answer, then marks each check pass/fail with a reason and tags the root cause of any failure (bad_retrieval / bad_generation / ambiguous_input). The same rubric runs on every onboarding decision (the Trust scoreboard); the &quot;Break it&quot; toggle there forces a failure so you can watch it get caught live.</p>
+              <table className="audit rubric-table" style={{ margin: "0 14px 14px", width: "calc(100% - 28px)" }}>
+                <thead><tr><th>Two scores, do not confuse them</th><th>What it measures</th><th>Range</th><th>Higher means</th></tr></thead>
+                <tbody>
+                  <tr><td><b>Similarity score</b> (Policy search / RAG)</td><td>How <b>relevant</b> a policy section is to the case - it picks the input.</td><td>0 to 1</td><td>more likely to be <b>picked</b></td></tr>
+                  <tr><td><b>Trust score</b> (here &amp; the scoreboard)</td><td>How <b>correct</b> an answer is against the 4 rubric checks - it grades the output.</td><td>0 to 100%</td><td>more <b>trustworthy</b></td></tr>
+                </tbody>
+              </table>
+            </details>
           </div>
         </div>
       )}
