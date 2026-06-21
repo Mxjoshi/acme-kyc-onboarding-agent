@@ -150,6 +150,7 @@ npm run build      # production build (also type-checks the whole app)
 npm run start      # run the production build
 npm run lint       # lint
 
+node scripts/ping.mjs                                          # check your Anthropic key works (prints KEY OK)
 node scripts/build-index.mjs                                   # rebuild the policy index
 node scripts/test-retrieval.mjs "do tourists need a branch"    # test search
 node scripts/test-agent.mjs                                    # run the agent on the samples
