@@ -9,21 +9,21 @@ A pure serverless host (e.g. plain Vercel) would reset the audit log between cli
 re-download the model on every cold start, so it is not used here.
 
 ## The pieces
-- **Code:** GitHub repo `Mxjoshi/acme-kyc-onboarding-agent` (public).
+- **Code:** GitHub repo `Mxjoshi/kyc-onboarding-agent` (public).
 - **Host:** Render web service, configured by `render.yaml` in this repo.
 - **Secret:** `ANTHROPIC_API_KEY` - set ONLY in the Render dashboard, never in git.
 
 ## First-time deploy (about 5 minutes, all in the browser)
 1. Go to https://render.com and sign up / log in (use "Continue with GitHub").
 2. Click **New +** -> **Blueprint**.
-3. Connect your GitHub and pick the repo **acme-kyc-onboarding-agent**.
+3. Connect your GitHub and pick the repo **kyc-onboarding-agent**.
    Render reads `render.yaml` automatically and fills in the build/start commands.
 4. It will ask for the value of **ANTHROPIC_API_KEY** (because it is marked secret).
    Paste your Claude API key here. This is the only manual field.
 5. Click **Apply** / **Create**. Render runs `npm install && npm run build`, then `npm run start`.
    First build takes a few minutes.
 6. When it finishes, Render gives you a public URL like
-   `https://acme-kyc-onboarding-agent.onrender.com`. That is your live link to submit.
+   `https://kyc-onboarding-agent.onrender.com`. That is your live link to submit.
 
 ## Updating the live app later
 Any time you push new code to GitHub `main`, Render rebuilds and redeploys automatically.

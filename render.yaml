@@ -3,7 +3,7 @@
 # The only thing you set by hand is the secret API key (sync: false below) in the dashboard.
 services:
   - type: web
-    name: acme-kyc-onboarding-agent
+    name: kyc-onboarding-agent
     runtime: node
     plan: free
     region: frankfurt # closest Render region to the UAE
