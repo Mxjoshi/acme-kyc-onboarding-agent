@@ -50,13 +50,16 @@ credit-decisioning capstone: a customer verified here flows on to the credit cop
 
 ## The seven screens
 
+The left sidebar groups them into **Workflow** (the operational console) and **Trust & transparency**
+(how the AI works and the proof it can be trusted).
+
 | Screen | What it shows |
 |--------|---------------|
 | **Dashboard** | What the app does, an interactive pipeline map, and live stats. |
 | **Onboarding** | The case console: a customer's profile and documents, run the check, see the cited decision and the trust scoreboard. A "Break it" switch injects bad retrieval to prove the trust layer catches it. |
 | **Review queue** | Cases escalated or paused for a human officer to action, with notes (human in the loop). |
-| **RAG search** | Retrieval made visible: the similarity map showing which policy sections were kept vs dropped for a case. |
-| **Evals** | The trust layer: runs the discrimination test live and shows the rubric. |
+| **Policy search (RAG)** | Retrieval made visible: the similarity map showing which policy sections were kept vs dropped for a case. |
+| **Trust layer (Evals)** | Runs the discrimination test live and shows the rubric, proving the grader catches bad answers. |
 | **Audit log** | Every decision recorded with outcome, trust score, root cause, and officer action. |
 | **Report** | Filterable decisions report with CSV export and a CBUAE alignment mapping. |
 
