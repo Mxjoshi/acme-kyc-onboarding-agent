@@ -597,6 +597,51 @@ export default function Home() {
               <p className="check-reason" style={{ marginTop: 10 }}>The top {retr.top_k} sections (green) become the only policy text the agent is allowed to use - so every claim it makes can be cited back to one of these. This is the &quot;retrieval&quot; that the &quot;generation&quot; is augmented with.</p>
             </div>
           )}
+
+          {retr && (
+            <div className="panel">
+              <div className="panel-h">Similarity map &middot; each dot is a policy section; closer to the centre = closer in meaning</div>
+              <div className="simmap">
+                {(() => {
+                  const cx = 190, cy = 158, minR = 36, maxR = 132;
+                  const scores = retr.sections.map((s: any) => s.score);
+                  const max = Math.max(...scores), min = Math.min(...scores);
+                  const pts = retr.sections.map((s: any, i: number) => {
+                    const norm = max === min ? 0.5 : (s.score - min) / (max - min); // 1 = closest
+                    const r = minR + (1 - norm) * (maxR - minR);
+                    const ang = i * (2 * Math.PI / retr.sections.length) - Math.PI / 2;
+                    const num = (String(s.section).match(/\d+/) || ["?"])[0];
+                    return { x: cx + r * Math.cos(ang), y: cy + r * Math.sin(ang), num, ...s };
+                  });
+                  return (
+                    <svg viewBox="0 0 380 316" role="img" aria-label="similarity map">
+                      {[maxR, (minR + maxR) / 2, minR].map((r, i) => (
+                        <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke="var(--line)" strokeDasharray="3 4" />
+                      ))}
+                      {pts.filter((p: any) => p.used).map((p: any, i: number) => (
+                        <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="var(--green)" strokeWidth={1} opacity={0.35} />
+                      ))}
+                      {pts.map((p: any, i: number) => (
+                        <g key={i}>
+                          <circle cx={p.x} cy={p.y} r={p.used ? 9 : 7} fill={p.used ? "var(--green)" : "var(--muted)"} opacity={p.used ? 1 : 0.55} />
+                          <text x={p.x} y={p.y + 3.5} textAnchor="middle" fontSize="10" fontWeight="700" fill="#fff">{p.num}</text>
+                          <title>{p.section} - similarity {p.score.toFixed(3)} ({p.used ? "used" : "dropped"})</title>
+                        </g>
+                      ))}
+                      <circle cx={cx} cy={cy} r={13} fill="#0b2545" />
+                      <text x={cx} y={cy + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#f6c453">case</text>
+                    </svg>
+                  );
+                })()}
+              </div>
+              <div className="simmap-legend">
+                <span><i style={{ background: "#0b2545" }} />the case (query)</span>
+                <span><i style={{ background: "var(--green)" }} />used (top {retr.top_k})</span>
+                <span><i style={{ background: "var(--muted)" }} />dropped</span>
+              </div>
+              <p className="check-reason" style={{ marginTop: 10 }}>The number in each dot is its policy section. Dots near the centre matched the case most closely (highest similarity), so they were kept and sent to the agent; dots near the edge were the least related and were dropped. Same data as the table above - just drawn as a map.</p>
+            </div>
+          )}
         </div>
       )}
 

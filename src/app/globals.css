@@ -295,3 +295,9 @@ body {
 .rmap-tc { font-size: 10px; color: var(--muted); font-family: ui-monospace, Menlo, monospace; }
 .rmap-step.core .rmap-tc { color: var(--green); }
 .rmap-arrow { color: var(--brand); font-size: 16px; font-weight: 700; }
+
+/* RAG similarity map (dots) */
+.simmap { display: flex; justify-content: center; background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.simmap svg { max-width: 100%; height: auto; }
+.simmap-legend { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+.simmap-legend i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
