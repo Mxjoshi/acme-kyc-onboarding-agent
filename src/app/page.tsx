@@ -73,26 +73,39 @@ function stepState(stage: string, id: string) {
   return idx < cur ? "done" : idx === cur ? "active" : "pending";
 }
 
-const NAV = [
-  { id: "dashboard", label: "Dashboard" },
-  { id: "onboarding", label: "Onboarding" },
-  { id: "review", label: "Review queue" },
-  { id: "retrieval", label: "RAG search" },
-  { id: "evals", label: "Evals" },
-  { id: "audit", label: "Audit log" },
-  { id: "report", label: "Report" },
+const NAV_GROUPS = [
+  {
+    group: "Workflow",
+    items: [
+      { id: "dashboard", label: "Dashboard" },
+      { id: "onboarding", label: "Onboarding" },
+      { id: "review", label: "Review queue" },
+      { id: "audit", label: "Audit log" },
+      { id: "report", label: "Report" },
+    ],
+  },
+  {
+    group: "Trust & transparency",
+    items: [
+      { id: "retrieval", label: "Policy search (RAG)" },
+      { id: "evals", label: "Trust layer (Evals)" },
+    ],
+  },
 ];
+const NAV_LABELS: Record<string, string> = Object.fromEntries(
+  NAV_GROUPS.flatMap((g) => g.items.map((i) => [i.id, i.label]))
+);
 
 // The pipeline map shown on the Dashboard. Click a step to read what it does.
 const PIPELINE = [
   { icon: "📂", label: "Documents in", tech: "input", core: false,
     desc: "Two things go in: the customer's own files (passport, Emirates ID, visa, salary, tenancy) and the bank's KYC/AML policy. Everything here is synthetic." },
   { icon: "🔍", label: "Policy search", tech: "RAG · transformers.js", core: false, goto: "retrieval",
-    desc: "Before deciding, the app finds the few policy sections that relate to this case by meaning, and gives the agent only those. Open the RAG search tab to watch this run." },
+    desc: "Before deciding, the app finds the few policy sections that relate to this case by meaning, and gives the agent only those. Open Policy search (RAG) to watch this run." },
   { icon: "🤖", label: "Agent decides", tech: "Claude", core: true,
     desc: "Claude reads ONLY the retrieved sections plus the documents, then recommends proceed / request documents / escalate, citing the exact section for every claim. It refuses instead of guessing when the policy is silent." },
   { icon: "⚖️", label: "Trust judge", tech: "Claude", core: true, goto: "evals",
-    desc: "A second, independent Claude call grades that answer against the 4-point rubric, scores it, and tags the root cause of any failure. This is the trust layer. Open the Evals tab to see it catch planted bad answers." },
+    desc: "A second, independent Claude call grades that answer against the 4-point rubric, scores it, and tags the root cause of any failure. This is the trust layer. Open Trust layer (Evals) to see it catch planted bad answers." },
   { icon: "📋", label: "Audit log", tech: "in-memory store", core: false, goto: "audit",
     desc: "Every decision (outcome, trust score, root-cause tag, officer action, time) is recorded. It powers the Dashboard, Review queue, Audit log and Report." },
   { icon: "🤝", label: "Handoff", tech: "→ capstone", core: false,
@@ -208,26 +221,35 @@ export default function Home() {
   }
 
   return (
-    <div>
-      <header className="topbar">
+    <div className="shell">
+      <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">A</div>
-          <div><div className="brand-name">Acme Bank UAE</div><div className="brand-sub">Onboarding &amp; Compliance Console</div></div>
+          <div><div className="brand-name">Acme Bank UAE</div><div className="brand-sub">Onboarding &amp; Compliance</div></div>
         </div>
-        <div className="topbar-right">
-          <span className="env-badge">Synthetic / Demo</span>
-          <div className="officer"><b>R. Al Mansoori</b><br />Onboarding Officer</div>
-        </div>
-      </header>
+        <nav className="sidenav">
+          {NAV_GROUPS.map((g) => (
+            <div key={g.group} className="navgroup">
+              <div className="navgroup-h">{g.group}</div>
+              {g.items.map((n) => (
+                <button key={n.id} className={`navitem${view === n.id ? " active" : ""}`} onClick={() => setView(n.id)}>
+                  <span>{n.label}</span>
+                  {n.id === "review" && reviewItems.length > 0 && <span className="nav-badge">{reviewItems.length}</span>}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+      </aside>
 
-      <nav className="nav">
-        {NAV.map((n) => (
-          <button key={n.id} className={`nav-item${view === n.id ? " active" : ""}`} onClick={() => setView(n.id)}>
-            {n.label}
-            {n.id === "review" && reviewItems.length > 0 && <span className="nav-badge">{reviewItems.length}</span>}
-          </button>
-        ))}
-      </nav>
+      <div className="content">
+        <header className="topbar">
+          <div className="topbar-title">{NAV_LABELS[view] ?? ""}</div>
+          <div className="topbar-right">
+            <span className="env-badge">Synthetic / Demo</span>
+            <div className="officer"><b>R. Al Mansoori</b><br />Onboarding Officer</div>
+          </div>
+        </header>
 
       {/* ===================== DASHBOARD ===================== */}
       {view === "dashboard" && (
@@ -687,7 +709,7 @@ export default function Home() {
             <table className="audit rubric-table" style={{ marginBottom: 14 }}>
               <thead><tr><th>Two scores, do not confuse them</th><th>What it measures</th><th>Range</th><th>Higher means</th></tr></thead>
               <tbody>
-                <tr><td><b>Similarity score</b> (RAG search)</td><td>How <b>relevant</b> a policy section is to the case - it picks the input.</td><td>0 to 1</td><td>more likely to be <b>picked</b></td></tr>
+                <tr><td><b>Similarity score</b> (Policy search / RAG)</td><td>How <b>relevant</b> a policy section is to the case - it picks the input.</td><td>0 to 1</td><td>more likely to be <b>picked</b></td></tr>
                 <tr><td><b>Trust score</b> (here &amp; the scoreboard)</td><td>How <b>correct</b> an answer is against the 4 rubric checks - it grades the output.</td><td>0 to 100%</td><td>more <b>trustworthy</b></td></tr>
               </tbody>
             </table>
@@ -869,9 +891,10 @@ export default function Home() {
         </div>
       )}
 
-      <footer className="footer">
-        Synthetic data only. No real customers. Acme Bank UAE is fictional. Built to align with CBUAE expectations for trustworthy AI.
-      </footer>
+        <footer className="footer">
+          Synthetic data only. No real customers. Acme Bank UAE is fictional. Built to align with CBUAE expectations for trustworthy AI.
+        </footer>
+      </div>
     </div>
   );
 }
