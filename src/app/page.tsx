@@ -360,7 +360,7 @@ export default function Home() {
                   <div className="panel-h">Compliance check<Info text="On run: the assistant retrieves the relevant policy sections, decides proceed / request documents / escalate from those sections only, cites each claim, refuses when the policy is silent, and escalates risky cases. The trust layer then grades the result." /></div>
                   <div className="runbar">
                     <button className="btn-primary" onClick={run} disabled={loading}>{loading ? "Running check..." : "Run KYC / AML check"}</button>
-                    <label className="toggle"><input type="checkbox" checked={breakIt} onChange={(e) => setBreakIt(e.target.checked)} /><span>Break it &middot; test the trust layer</span></label>
+                    <label className="toggle"><input type="checkbox" checked={breakIt} onChange={(e) => setBreakIt(e.target.checked)} /><span>Break it &middot; test the trust layer<Info text="A demo switch. It deliberately gives the agent the WRONG policy sections (bad retrieval) so it produces a poor answer. The point is to prove the trust layer notices: the score should drop and the root cause should read bad_retrieval. Leave it OFF for a real decision." /></span></label>
                   </div>
                   {error && <p style={{ color: "var(--red)", marginTop: 12 }}>{error}</p>}
                 </section>
@@ -411,20 +411,39 @@ export default function Home() {
               <>
                 <section className="panel">
                   <div className="panel-h">Decision {result.case_id && <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400, color: "var(--muted)" }}>&middot; {result.case_id}</span>}</div>
+
+                  {result.breakIt && (
+                    <div className="breakit-note">
+                      <div className="breakit-head">&#9888; Deliberately broken run (Break it is ON)</div>
+                      <p>On purpose, the agent was given the <b>wrong policy sections</b> (bad retrieval), so the answer below is expected to be poor. That is the test. Look at the <b>Trust scoreboard</b> below: it should score low and tag <b>bad_retrieval</b>, which proves the trust layer catches the failure. Turn Break it OFF and re-run for the real decision (it scores 100%).</p>
+                    </div>
+                  )}
+
                   <div className={`banner ${result.decision.recommendation}`}>
                     <div className="banner-rec">{REC_LABEL[result.decision.recommendation]}</div>
                     <div className="banner-sub">{REC_SUB[result.decision.recommendation]}</div>
                   </div>
-                  <div style={{ marginBottom: 12 }}>
+                  <div className="meta-row">
                     <span className="chip gray">confidence: {result.decision.confidence}</span>
-                    {result.breakIt && <span className="chip red" style={{ marginLeft: 8 }}>BREAK-IT MODE</span>}
+                    {result.breakIt && <span className="chip red">deliberately broken run</span>}
                   </div>
-                  <p className="summary">{result.decision.summary}</p>
-                  <ul className="keypoints">{result.decision.key_points.map((k, i) => <li key={i}>{k}</li>)}</ul>
-                  {result.decision.missing_documents.length > 0 && (<div className="callout"><b>Missing documents:</b> {result.decision.missing_documents.join(", ")}</div>)}
-                  {result.decision.escalation_reason && (<div className="callout"><b>Escalation reason:</b> {result.decision.escalation_reason}</div>)}
+
+                  <div className="vblock">
+                    <div className="vlabel">Summary</div>
+                    <p className="summary">{result.decision.summary}</p>
+                  </div>
+
+                  <div className="vblock">
+                    <div className="vlabel">Why &middot; key points</div>
+                    <ul className="keypoints">{result.decision.key_points.map((k, i) => <li key={i}>{k}</li>)}</ul>
+                  </div>
+
+                  {result.decision.missing_documents.length > 0 && (<div className="callout amber"><b>Missing documents</b><div>{result.decision.missing_documents.join(", ")}</div></div>)}
+                  {result.decision.escalation_reason && (<div className="callout red"><b>Escalation reason</b><div>{result.decision.escalation_reason}</div></div>)}
+
                   <details className="reasoning"><summary>Full reasoning</summary><p className="answer">{result.decision.answer_text}</p></details>
-                  <div className="panel-h" style={{ marginTop: 14 }}>Citations <span style={{ textTransform: "none", fontWeight: 400, letterSpacing: 0, color: "var(--muted)" }}>&middot; click a section to read the rule</span></div>
+
+                  <div className="vlabel" style={{ marginTop: 16 }}>Citations <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0, color: "var(--muted)" }}>&middot; click a section to read the rule</span></div>
                   {(result.citations ?? result.decision.citations).map((c, i) => (
                     <details key={i} className="cite"><summary><span className="cite-sec">[{c.section}]</span> {c.claim}</summary>
                       <pre className="cite-src">{(c as SourcedCitation).source_text ?? "Rule text not found for this section."}</pre>
