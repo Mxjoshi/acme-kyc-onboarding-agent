@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buildathon - KYC Onboarding Agent</title>
+<style>
+  :root{
+    --card:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+    --brand:#2563eb; --green:#16a34a; --amber:#d97706; --red:#dc2626; --soft:#f1f5f9;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--ink);background:#f8fafc;}
+  header{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:24px 24px 16px;}
+  header h1{margin:0 0 6px;font-size:23px}
+  header p{margin:0;opacity:.92;font-size:14px}
+  /* tabs */
+  nav.tabs{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);
+           display:flex;flex-wrap:wrap;gap:2px;padding:0 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  nav.tabs button{appearance:none;border:none;background:none;cursor:pointer;font:inherit;font-size:14px;
+           font-weight:600;color:var(--muted);padding:14px 14px;border-bottom:3px solid transparent}
+  nav.tabs button:hover{color:var(--ink)}
+  nav.tabs button.active{color:var(--brand);border-bottom-color:var(--brand)}
+  main{max-width:980px;margin:0 auto;padding:20px 24px 60px}
+  section.tab{display:none;animation:fade .2s ease}
+  section.tab.show{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:0 0 18px;
+        box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  h2{font-size:19px;margin:0 0 14px}
+  h3{font-size:13px;margin:18px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 10px;border-radius:999px}
+  .ok{background:#dcfce7;color:var(--green)} .prog{background:#fef3c7;color:var(--amber)}
+  .todo{background:#f1f5f9;color:var(--muted)} .key{background:#dbeafe;color:var(--brand)}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  tr:last-child td{border-bottom:none}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .step{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;flex:1;min-width:150px}
+  .step b{display:block;font-size:14px} .step span{font-size:12px;color:var(--muted)}
+  .arrow{color:var(--brand);font-weight:700;font-size:20px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+  .kv span:first-child{color:var(--muted)}
+  .check{list-style:none;padding:0;margin:0}
+  .check li{padding:7px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;font-size:14px;gap:10px}
+  code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:13px}
+  .note{font-size:13px;color:var(--muted);margin-top:10px}
+  ul.plain{margin:6px 0;padding-left:20px} ul.plain li{margin:4px 0}
+  .fgwrap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:6px}
+  .fg{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--soft)}
+  .fg h4{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+  .fg.identity{border-top:4px solid #7c3aed} .fg.aml{border-top:4px solid var(--amber)} .fg.econ{border-top:4px solid var(--green)}
+  .fg ul{margin:0;padding-left:18px;font-size:13px} .fg li{margin:3px 0}
+  .fg .tag{display:inline-block;margin-top:8px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px}
+  .tag.v{background:#ede9fe;color:#7c3aed} .tag.a{background:#fef3c7;color:var(--amber)} .tag.e{background:#dcfce7;color:var(--green)}
+  .layer{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
+  .layer .lhead{font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+  .lboxes{display:flex;flex-wrap:wrap;gap:8px}
+  .lbox{flex:1;min-width:130px;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:13px}
+  .lbox b{display:block;font-size:13px;margin-bottom:2px} .lbox span{font-size:11.5px;color:var(--muted)}
+  .down{text-align:center;color:var(--brand);font-size:22px;line-height:1;margin:6px 0}
+  .core{border:2px solid var(--brand);background:#eff6ff}
+  .term{padding:12px 0;border-bottom:1px solid var(--line)}
+  .term:last-child{border-bottom:none}
+  .term b{font-size:15px;color:var(--ink)} .term .say{font-size:12px;color:var(--brand);font-style:italic;margin-left:6px}
+  .term p{margin:4px 0 0;font-size:14px;color:#334155}
+  .term .ex{margin:8px 0 0;font-size:13px;background:var(--soft);border-left:3px solid var(--brand);
+            border-radius:6px;padding:8px 10px;color:#334155}
+  .term .ex b{color:var(--brand)}
+  /* data model visual */
+  .erzone{border-radius:14px;padding:14px;margin:0 0 4px}
+  .erzone.shared{background:#f5f3ff;border:1px solid #ddd6fe}
+  .erzone.rag{background:#eff6ff;border:1px solid #bfdbfe}
+  .erzone.trust{background:#ecfdf5;border:1px solid #bbf7d0}
+  .erzone .zhead{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;margin-bottom:12px}
+  .erzone .zhead .dot{width:10px;height:10px;border-radius:50%}
+  .shared .dot{background:#7c3aed} .rag .dot{background:var(--brand)} .trust .dot{background:var(--green)}
+  .zhead .ztag{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .ents{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .ent{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .ent .eh{font-weight:700;font-size:13.5px;padding:8px 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px}
+  .shared .ent .eh{background:#f5f3ff} .rag .ent .eh{background:#eff6ff} .trust .ent .eh{background:#ecfdf5}
+  .ent ul{margin:0;padding:8px 10px 10px 24px;font-size:12.5px;color:#475569}
+  .ent li{margin:2px 0}
+  .ent .star{color:var(--amber)}
+  .relrow{text-align:center;color:var(--muted);font-size:12.5px;margin:10px 0;font-weight:600}
+  .relrow b{color:var(--brand)}
+  .vdown{text-align:center;color:var(--muted);font-size:20px;margin:2px 0}
+  /* schema structure */
+  .schema{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:0 0 14px}
+  .schema .sh{background:#0f172a;color:#fff;padding:10px 14px;font:600 14px ui-monospace,Menlo,monospace;display:flex;justify-content:space-between;align-items:center}
+  .schema .sh .stag{font:600 10px -apple-system,sans-serif;text-transform:uppercase;letter-spacing:.05em;opacity:.7}
+  .schema .row{display:flex;justify-content:space-between;gap:12px;padding:7px 14px;border-top:1px solid var(--line);font:13px ui-monospace,Menlo,monospace}
+  .schema .row:nth-child(odd){background:var(--soft)}
+  .schema .fname{color:#0f172a;font-weight:600} .schema .ftype{color:var(--brand);text-align:right}
+  .schema .req{color:var(--red);font-weight:700}
+  details.exp{margin-top:8px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  details.exp>summary{cursor:pointer;list-style:none;padding:13px 16px;font-weight:600;font-size:14px;
+        color:var(--brand);background:var(--soft);display:flex;align-items:center;gap:8px}
+  details.exp>summary::-webkit-details-marker{display:none}
+  details.exp>summary::before{content:"\25B6";font-size:10px;transition:transform .15s}
+  details.exp[open]>summary::before{transform:rotate(90deg)}
+  details.exp .expbody{padding:14px 16px}
+  details.exp pre.doc{margin:0;white-space:pre-wrap;font:12.5px/1.55 ui-monospace,Menlo,Consolas,monospace;
+        color:#1e293b;background:#fbfbfd;border:1px solid var(--line);border-radius:8px;padding:12px 14px;max-height:460px;overflow:auto}
+  .schema .row.nested{background:#fff7ed}
+  .schema .nb{display:inline-block;font:600 10px -apple-system,sans-serif;background:#ffedd5;color:#c2410c;
+        padding:1px 6px;border-radius:999px;margin-left:6px;vertical-align:middle}
+  .neslegend{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+  .neslegend .nb{margin-left:0}
+  /* architecture steps (friendly) */
+  .astep{display:flex;gap:14px;align-items:flex-start;background:#fff;border:1px solid var(--line);
+         border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .astep.is-core{border:2px solid var(--brand);background:#eff6ff}
+  .astep .num{flex:none;width:42px;height:42px;border-radius:50%;background:var(--brand);color:#fff;
+         font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center}
+  .astep.is-core .num{background:var(--green)}
+  .astep .body{flex:1}
+  .astep .ttl{font-size:16px;font-weight:700;margin:0 0 2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .astep .ttl .emoji{font-size:20px}
+  .astep .what{margin:2px 0 0;font-size:14px;color:#334155}
+  .astep .eg{margin:10px 0 0;font-size:13px;background:var(--soft);border-left:3px solid var(--green);
+         border-radius:6px;padding:8px 10px;color:#334155}
+  .astep .eg b{color:var(--green)}
+  .conn{display:flex;justify-content:center;align-items:center;gap:8px;color:var(--brand);
+        font-size:13px;font-weight:600;margin:8px 0}
+  .conn .ln{width:2px;height:18px;background:var(--brand);opacity:.4}
+  .badge-core{font-size:11px;font-weight:700;background:#dcfce7;color:var(--green);padding:2px 8px;border-radius:999px}
+  /* expandable structure */
+  .struct{max-width:980px;margin:0 auto;padding:0 24px 50px}
+  details.tree{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:0;overflow:hidden}
+  details.tree summary{cursor:pointer;list-style:none;padding:14px 18px;font-weight:600;font-size:14px;
+        color:#fff;display:flex;align-items:center;gap:8px;background:#1e293b}
+  details.tree summary::-webkit-details-marker{display:none}
+  details.tree summary::before{content:"\25B6";font-size:11px;transition:transform .15s}
+  details.tree[open] summary::before{transform:rotate(90deg)}
+  details.tree pre{margin:0;padding:16px 18px;font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+        white-space:pre;overflow-x:auto;color:#cbd5e1}
+  details.tree .fc{color:#7dd3fc} details.tree .note{color:#64748b;margin:0}
+  /* interactive stack + flow diagram */
+  .dg-wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;align-items:start}
+  .dg-flow{display:flex;flex-direction:column}
+  .dg-node{width:100%;text-align:left;cursor:pointer;background:#fff;border:1.5px solid var(--line);
+     border-radius:12px;padding:11px 14px;display:flex;gap:12px;align-items:center;transition:.15s;font:inherit}
+  .dg-node:hover{border-color:var(--brand);box-shadow:0 2px 8px rgba(37,99,235,.12)}
+  .dg-node.active{border-color:var(--brand);background:#eff6ff;box-shadow:0 2px 10px rgba(37,99,235,.18)}
+  .dg-node .ic{flex:none;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--soft)}
+  .dg-node .nm{font-weight:700;font-size:14px;line-height:1.2}
+  .dg-node .sub{font-size:12px;color:var(--muted)}
+  .dg-node .tech{margin-left:auto;font:600 11px ui-monospace,Menlo,monospace;color:var(--brand);background:#dbeafe;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .dg-node.core{border-color:#86efac} .dg-node.core.active{background:#ecfdf5;border-color:var(--green);box-shadow:0 2px 10px rgba(22,163,74,.18)}
+  .dg-node.core .tech{color:var(--green);background:#dcfce7}
+  .dg-arrow{align-self:center;color:var(--brand);font-size:17px;margin:5px 0;line-height:1}
+  .dg-arrow small{display:block;font-size:10.5px;color:var(--muted);text-align:center;font-weight:600}
+  .dg-panel{position:sticky;top:62px;background:#0f172a;color:#e2e8f0;border-radius:14px;padding:18px 20px}
+  .dg-panel .pt{font-size:17px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
+  .dg-panel .ptech{display:inline-block;font:600 12px ui-monospace,Menlo,monospace;background:#1e293b;color:#7dd3fc;padding:3px 9px;border-radius:7px;margin-top:10px}
+  .dg-panel .pr{font-size:11px;color:#7dd3fc;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 3px;font-weight:700}
+  .dg-panel .pv{font-size:13.5px;color:#cbd5e1;line-height:1.6;margin:0}
+  .dg-panel .peg{margin-top:12px;font-size:13px;background:#1e293b;border-left:3px solid var(--green);border-radius:6px;padding:9px 11px;color:#cbd5e1}
+  .dg-panel .peg b{color:#86efac}
+  .dg-hint{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+  .pipe{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+  .pipe .pstep{flex:1;min-width:150px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+  .pipe .pstep b{display:block;font-size:13.5px;margin-bottom:2px} .pipe .pstep span{font-size:12px;color:var(--muted)}
+  .pipe .parrow{align-self:center;color:var(--brand);font-weight:700;font-size:20px}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}.fgwrap{grid-template-columns:1fr}.ents{grid-template-columns:1fr}.dg-wrap{grid-template-columns:1fr}.dg-panel{position:static}}
+</style>
+</head>
+<body>
+<header>
+  <h1>KYC Onboarding Agent <span class="pill key">Buildathon</span></h1>
+  <p>Trustworthy, agentic onboarding for the UAE expat newcomer. Companion to the credit copilot (capstone).</p>
+</header>
+
+<nav class="tabs" id="tabnav">
+  <button data-tab="overview" class="active">Overview</button>
+  <button data-tab="journey">Journey</button>
+  <button data-tab="profile">Profile</button>
+  <button data-tab="fields">Field groups</button>
+  <button data-tab="model">Data model</button>
+  <button data-tab="arch">Architecture</button>
+  <button data-tab="stack">Tech &amp; flow</button>
+  <button data-tab="documents">Documents</button>
+  <button data-tab="glossary">Glossary</button>
+  <button data-tab="progress">Progress</button>
+</nav>
+
+<main>
+
+  <!-- OVERVIEW -->
+  <section class="tab show" id="overview">
+    <div class="card">
+      <h2>What we are building</h2>
+      <p class="note">This is <b>App 1 of a two-app portfolio</b> for the UAE newcomer banking journey.
+         See the <b>Journey</b> tab for both apps and how they connect.</p>
+      <p>An agentic assistant that checks a new customer's identity, AML risk, and documents against policy,
+         returns <b>proceed / request documents / escalate</b> with every claim cited to a policy section,
+         refuses to guess when policy is silent, and escalates risky cases to a human. The point is the
+         visible <b>trust layer</b>: citations, honest refusal, an eval harness proven to catch bad answers,
+         and root cause analysis of failures.</p>
+      <h3>Why this one</h3>
+      <ul class="plain">
+        <li>It is the research's top pick: a trustworthy <b>agentic</b> AI doing a real consumer finance task.</li>
+        <li>It shows the skills the capstone could not: <b>RAG with citations</b> and genuine agentic behavior.</li>
+        <li>KYC/AML is regulator-mandated in the UAE, so the trust layer matters and demos hard.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- JOURNEY -->
+  <section class="tab" id="journey">
+    <div class="card">
+      <h2>The two apps (the full picture)</h2>
+      <p>This is part of a two-app portfolio that covers a UAE newcomer's banking journey end to end.
+         The expat newcomer problem: the UAE is about 88% expat, and a new arrival starts with a blank
+         local credit file, so banks struggle to onboard and lend to them quickly and fairly.</p>
+      <div class="grid">
+        <div class="layer">
+          <div class="lhead">App 1 &middot; This buildathon</div>
+          <b>KYC Onboarding Agent</b>
+          <ul class="plain">
+            <li>Gets the newcomer safely <b>in the door</b>.</li>
+            <li>Verifies identity, AML risk, and documents against policy.</li>
+            <li>Output: <b>proceed / request documents / escalate</b>, every claim cited, refuses when unsure.</li>
+            <li>New tech: RAG with citations, agentic behavior, eval harness.</li>
+          </ul>
+        </div>
+        <div class="layer core">
+          <div class="lhead">App 2 &middot; The capstone (already built)</div>
+          <b>Newcomer Credit Decisioning Copilot</b>
+          <ul class="plain">
+            <li>Decides if that newcomer is <b>safe to lend to</b>.</li>
+            <li>A B2B tool for UAE digital banks. Uses a deterministic scorecard plus alternative data
+                (salary, tenure, rent history), with an LLM writing the explanation only.</li>
+            <li>Output: <b>approve / decline / refer</b>, with a defensible explanation; a human makes the final call.</li>
+            <li>Built as the PMCurve AI-PM capstone (a deployed, working MVP).</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">App 1 onboards the customer; App 2 then lends. Same persona, same regulator, two stages of one journey.</p>
+    </div>
+
+    <div class="card">
+      <h2>The newcomer journey (how they connect)</h2>
+      <div class="flow">
+        <div class="step"><b>Omar arrives</b><span>Expat, new to the UAE, blank credit file</span></div>
+        <div class="arrow">&rarr;</div>
+        <div class="step"><b>Onboarding agent</b><span>App 1: verify ID, AML, documents</span></div>
+        <div class="arrow">&rarr;</div>
+        <div class="step"><b>Verified profile</b><span>The shared handoff object</span></div>
+        <div class="arrow">&rarr;</div>
+        <div class="step"><b>Credit copilot</b><span>App 2: approve / decline / refer</span></div>
+      </div>
+      <p class="note">One customer, one profile, two agents. Onboarding verifies the same fields the capstone later scores, so no data is re-entered.</p>
+    </div>
+  </section>
+
+  <!-- PROFILE -->
+  <section class="tab" id="profile">
+    <div class="card">
+      <h2>The shared customer profile <span class="pill key">the connector</span></h2>
+      <p>The onboarding agent <b>writes</b> this; the capstone <b>reads</b> the economic part as its <code>Applicant</code>.</p>
+      <h3>Sample customer: Omar (a clean "proceed" case)</h3>
+      <div class="grid">
+        <div>
+          <div class="kv"><span>Full name</span><span>Omar Khan</span></div>
+          <div class="kv"><span>Nationality</span><span>India</span></div>
+          <div class="kv"><span>Age</span><span>34</span></div>
+          <div class="kv"><span>KYC status</span><span><span class="pill ok">verified</span></span></div>
+          <div class="kv"><span>AML risk</span><span><span class="pill ok">low</span></span></div>
+          <div class="kv"><span>PEP / sanctions</span><span>no / no</span></div>
+        </div>
+        <div>
+          <div class="kv"><span>Months in UAE</span><span>16</span></div>
+          <div class="kv"><span>Visa</span><span>employment (8 mo left)</span></div>
+          <div class="kv"><span>Employment</span><span>employed, free zone</span></div>
+          <div class="kv"><span>Job tenure</span><span>15 months</span></div>
+          <div class="kv"><span>Monthly salary</span><span>AED 22,000</span></div>
+          <div class="kv"><span>Rent history</span><span>on time, 6 months+</span></div>
+        </div>
+      </div>
+      <h3>His documents (the common docs both apps reference)</h3>
+      <p>passport &middot; Emirates ID &middot; residence visa &middot; salary certificate &middot; tenancy contract <span class="pill key">all synthetic</span></p>
+    </div>
+  </section>
+
+  <!-- FIELD GROUPS -->
+  <section class="tab" id="fields">
+    <div class="card">
+      <h2>The three field groups in the profile</h2>
+      <p>The shared profile has three kinds of fields. Onboarding fills in all three. The capstone only
+         uses the <b>economic</b> group as its <code>Applicant</code>.</p>
+      <div class="fgwrap">
+        <div class="fg identity">
+          <h4>1. Identity (KYC)</h4>
+          <ul><li>customer_id</li><li>full_name</li><li>nationality</li><li>date_of_birth</li><li>age_years</li><li>passport_number</li><li>emirates_id</li></ul>
+          <span class="tag v">who they are</span>
+        </div>
+        <div class="fg aml">
+          <h4>2. AML status</h4>
+          <ul><li>kyc_status</li><li>aml_risk_band</li><li>pep_flag</li><li>sanctions_hit</li></ul>
+          <span class="tag a">safe to onboard</span>
+        </div>
+        <div class="fg econ">
+          <h4>3. Economic &rarr; Applicant</h4>
+          <ul><li>months_in_uae</li><li>visa_type</li><li>visa_months_remaining</li><li>employment_status</li><li>job_tenure_months</li><li>employer_category</li><li>monthly_salary_aed</li><li>rent_history</li></ul>
+          <span class="tag e">can afford credit</span>
+        </div>
+      </div>
+      <p class="note">The economic group names match the capstone exactly, so this slice drops straight in as its Applicant with no conversion.</p>
+    </div>
+  </section>
+
+  <!-- DATA MODEL -->
+  <section class="tab" id="model">
+    <div class="card">
+      <h2>The data model</h2>
+      <p class="note">Three zones. Data flows top to bottom: the shared customer, then the onboarding run, then the trust check. <span class="star">&#9733;</span> marks the key entity. Open the expander at the bottom to see every field and type.</p>
+
+      <div class="erzone shared">
+        <div class="zhead"><span class="dot"></span> Shared layer <span class="ztag">both apps read this</span></div>
+        <div class="ents">
+          <div class="ent">
+            <div class="eh">&#128100; CustomerProfile</div>
+            <ul><li class="star">&#9733; the verified person</li><li>identity + AML + economic</li><li>kyc_status, aml_risk_band</li><li>salary, visa, tenure ...</li></ul>
+          </div>
+          <div class="ent">
+            <div class="eh">&#128196; CustomerDocument</div>
+            <ul><li>the uploaded files</li><li>passport, salary cert ...</li><li>extracted_text</li></ul>
+          </div>
+          <div class="ent">
+            <div class="eh">&#128269; FieldProvenance</div>
+            <ul><li>where each value came from</li><li>field, source doc, section</li><li>verified yes/no</li></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="relrow">a <b>CustomerProfile</b> is the input to one onboarding run &nbsp;&darr;</div>
+
+      <div class="erzone rag">
+        <div class="zhead"><span class="dot"></span> Onboarding + retrieval (RAG) <span class="ztag">buildathon</span></div>
+        <div class="ents">
+          <div class="ent">
+            <div class="eh">&#129513; PolicyChunk</div>
+            <ul><li>policy cut into pieces</li><li>section, text</li><li>embedding (for search)</li></ul>
+          </div>
+          <div class="ent">
+            <div class="eh">&#9889; OnboardingCase</div>
+            <ul><li class="star">&#9733; one run of the agent</li><li>proceed / request / escalate</li><li>answer, confidence</li></ul>
+          </div>
+          <div class="ent">
+            <div class="eh">&#128279; Citation</div>
+            <ul><li>one claim &rarr; one section</li><li>links to a PolicyChunk</li></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="relrow">each answer is graded &nbsp;&darr;</div>
+
+      <div class="erzone trust">
+        <div class="zhead"><span class="dot"></span> Trust layer <span class="ztag">the core, never cut</span></div>
+        <div class="ents">
+          <div class="ent">
+            <div class="eh">&#9989; RubricCheck</div>
+            <ul><li>one yes/no question</li><li>e.g. "is every claim cited"</li></ul>
+          </div>
+          <div class="ent">
+            <div class="eh">&#9878; EvalResult</div>
+            <ul><li class="star">&#9733; the judge's verdict</li><li>score, failed checks</li><li>rca_tag (why it failed)</li></ul>
+          </div>
+          <div class="ent">
+            <div class="eh">&#128165; DiscriminationCase</div>
+            <ul><li>a planted bad answer</li><li>proves the rubric catches it</li></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="relrow">a verified <b>CustomerProfile</b> then flows to the capstone &rarr; <b>credit decision</b></div>
+
+      <details class="exp">
+        <summary>Show every field and type (full schema)</summary>
+        <div class="expbody">
+          <p class="neslegend"><span class="nb">nested</span> = this field holds another entity inside it (an array of objects, or a whole object). Other links, like customer_id, are references by id, not nesting.</p>
+          <h3>Shared layer</h3>
+          <div class="schema">
+            <div class="sh"><span>CustomerProfile <span class="req">*</span></span><span class="stag">the verified person</span></div>
+            <div class="row"><span class="fname">customer_id</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">full_name</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">nationality</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">date_of_birth</span><span class="ftype">string (ISO date)</span></div>
+            <div class="row"><span class="fname">age_years</span><span class="ftype">number</span></div>
+            <div class="row"><span class="fname">passport_number</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">emirates_id</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">kyc_status</span><span class="ftype">verified | pending | rejected | escalated</span></div>
+            <div class="row"><span class="fname">aml_risk_band</span><span class="ftype">low | medium | high</span></div>
+            <div class="row"><span class="fname">pep_flag</span><span class="ftype">boolean</span></div>
+            <div class="row"><span class="fname">sanctions_hit</span><span class="ftype">boolean</span></div>
+            <div class="row"><span class="fname">months_in_uae</span><span class="ftype">number</span></div>
+            <div class="row"><span class="fname">visa_type</span><span class="ftype">employment | golden | green | other</span></div>
+            <div class="row"><span class="fname">visa_months_remaining</span><span class="ftype">number</span></div>
+            <div class="row"><span class="fname">employment_status</span><span class="ftype">employed | self_employed | unemployed</span></div>
+            <div class="row"><span class="fname">job_tenure_months</span><span class="ftype">number</span></div>
+            <div class="row"><span class="fname">employer_category</span><span class="ftype">government | mainland_private | free_zone | sme | other</span></div>
+            <div class="row"><span class="fname">monthly_salary_aed</span><span class="ftype">number</span></div>
+            <div class="row"><span class="fname">rent_history</span><span class="ftype">on_time_6plus | on_time_under_6 | late_payments | none</span></div>
+            <div class="row nested"><span class="fname">field_provenance <span class="nb">nested</span></span><span class="ftype">FieldProvenance[]</span></div>
+          </div>
+          <div class="schema">
+            <div class="sh"><span>CustomerDocument</span><span class="stag">an uploaded file</span></div>
+            <div class="row"><span class="fname">document_id</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">customer_id</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">doc_type</span><span class="ftype">passport | emirates_id | visa | salary_certificate | tenancy_contract | other</span></div>
+            <div class="row"><span class="fname">file_name</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">extracted_text</span><span class="ftype">string</span></div>
+          </div>
+          <div class="schema">
+            <div class="sh"><span>FieldProvenance</span><span class="stag">where a value came from</span></div>
+            <div class="row"><span class="fname">field_name</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">source_document_id</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">source_section</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">verified</span><span class="ftype">boolean</span></div>
+          </div>
+
+          <h3>Onboarding + retrieval</h3>
+          <div class="schema">
+            <div class="sh"><span>PolicyChunk</span><span class="stag">a citable piece of policy</span></div>
+            <div class="row"><span class="fname">chunk_id</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">doc_title</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">section</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">text</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">embedding</span><span class="ftype">number[]</span></div>
+          </div>
+          <div class="schema">
+            <div class="sh"><span>OnboardingCase <span class="req">*</span></span><span class="stag">one run of the agent</span></div>
+            <div class="row"><span class="fname">case_id</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">customer_id</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">created_at</span><span class="ftype">string (ISO)</span></div>
+            <div class="row"><span class="fname">recommendation</span><span class="ftype">proceed | request_documents | escalate</span></div>
+            <div class="row"><span class="fname">missing_documents</span><span class="ftype">string[]</span></div>
+            <div class="row"><span class="fname">escalation_reason</span><span class="ftype">string | null</span></div>
+            <div class="row"><span class="fname">answer_text</span><span class="ftype">string</span></div>
+            <div class="row nested"><span class="fname">citations <span class="nb">nested</span></span><span class="ftype">Citation[]</span></div>
+            <div class="row"><span class="fname">confidence</span><span class="ftype">high | medium | low</span></div>
+            <div class="row"><span class="fname">status</span><span class="ftype">awaiting_review | closed</span></div>
+          </div>
+          <div class="schema">
+            <div class="sh"><span>Citation</span><span class="stag">one claim, one source</span></div>
+            <div class="row"><span class="fname">claim</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">chunk_id</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">doc_title</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">section</span><span class="ftype">string</span></div>
+          </div>
+
+          <h3>Trust layer</h3>
+          <div class="schema">
+            <div class="sh"><span>RubricCheck</span><span class="stag">one grading question</span></div>
+            <div class="row"><span class="fname">check_id</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">question</span><span class="ftype">string</span></div>
+          </div>
+          <div class="schema">
+            <div class="sh"><span>EvalResult <span class="req">*</span></span><span class="stag">the judge's verdict</span></div>
+            <div class="row"><span class="fname">eval_id</span><span class="ftype">string</span></div>
+            <div class="row"><span class="fname">case_id</span><span class="ftype">string</span></div>
+            <div class="row nested"><span class="fname">per_check <span class="nb">nested</span></span><span class="ftype">{ check_id, passed, reason }[]</span></div>
+            <div class="row"><span class="fname">score</span><span class="ftype">number (passed / total)</span></div>
+            <div class="row"><span class="fname">failed_checks</span><span class="ftype">string[]</span></div>
+            <div class="row"><span class="fname">rca_tag</span><span class="ftype">bad_retrieval | bad_generation | ambiguous_input | none</span></div>
+          </div>
+          <div class="schema">
+            <div class="sh"><span>DiscriminationCase</span><span class="stag">a planted bad answer</span></div>
+            <div class="row"><span class="fname">name</span><span class="ftype">string</span></div>
+            <div class="row nested"><span class="fname">broken_output <span class="nb">nested</span></span><span class="ftype">OnboardingCase</span></div>
+            <div class="row"><span class="fname">expected_to_fail</span><span class="ftype">string[]</span></div>
+            <div class="row"><span class="fname">caught</span><span class="ftype">boolean</span></div>
+          </div>
+          <p class="note">The economic fields in CustomerProfile (months_in_uae through rent_history) match the capstone's Applicant exactly, so the handoff needs no conversion.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section class="tab" id="arch">
+    <div class="card">
+      <h2>How the app works, step by step</h2>
+      <p class="note">Follow Omar's case from documents to a trusted recommendation. Each step says what happens and shows a real example.</p>
+
+      <div class="astep">
+        <div class="num">1</div>
+        <div class="body">
+          <p class="ttl"><span class="emoji">&#128194;</span> We give it the documents</p>
+          <p class="what">Two things go in: the customer's own files, and the bank's policy rulebook. Everything is synthetic.</p>
+          <div class="eg"><b>For Omar:</b> his passport, Emirates ID, visa, salary certificate and tenancy contract, plus the bank's KYC and AML policy.</div>
+        </div>
+      </div>
+      <div class="conn"><div class="ln"></div></div>
+
+      <div class="astep">
+        <div class="num">2</div>
+        <div class="body">
+          <p class="ttl"><span class="emoji">&#128218;</span> We prepare the policy so it is searchable <span class="badge-core" style="background:#dbeafe;color:#2563eb">this is RAG</span></p>
+          <p class="what">The long policy is cut into small sections, each turned into "meaning numbers", and stored so we can later find the right rule by meaning, not just keywords.</p>
+          <div class="eg"><b>In practice:</b> our KYC/AML policy is split into its 9 sections, each turned into a searchable piece like "Section 4. Required documents."</div>
+        </div>
+      </div>
+      <div class="conn"><div class="ln"></div></div>
+
+      <div class="astep">
+        <div class="num">3</div>
+        <div class="body">
+          <p class="ttl"><span class="emoji">&#128269;</span> It finds the relevant rules</p>
+          <p class="what">When the officer asks something, the app pulls only the few policy sections that actually relate to the question.</p>
+          <div class="eg"><b>For Omar:</b> the officer asks "can we onboard him?" The app fetches the document-requirement and AML-risk sections, ignoring the rest.</div>
+        </div>
+      </div>
+      <div class="conn"><div class="ln"></div></div>
+
+      <div class="astep">
+        <div class="num">4</div>
+        <div class="body">
+          <p class="ttl"><span class="emoji">&#129302;</span> The agent answers, using only those rules</p>
+          <p class="what">Claude reads the fetched rules and Omar's documents, then gives a recommendation with every claim cited. If the policy does not cover it, it refuses instead of guessing. Risky cases go to a human.</p>
+          <div class="eg"><b>For Omar:</b> "Proceed. Passport, Emirates ID and valid visa present, AML risk low (Section 4.2, Section 6.1)." A clean, cited recommendation.</div>
+        </div>
+      </div>
+      <div class="conn"><div class="ln"></div></div>
+
+      <div class="astep is-core">
+        <div class="num">5</div>
+        <div class="body">
+          <p class="ttl"><span class="emoji">&#9878;</span> The trust layer checks the answer <span class="badge-core">the heart of the project</span></p>
+          <p class="what">A second AI grades that answer against a rubric (every claim cited? refused when needed? no invented facts?), gives a score, and if something fails, tags why. We also feed it planted bad answers to prove the grader really catches mistakes.</p>
+          <div class="eg"><b>For Omar:</b> the judge marks all checks passed, score 3 of 3. When we sneak in a fake "no ID needed" answer, the judge correctly fails it. That proves the check works.</div>
+        </div>
+      </div>
+      <div class="conn"><div class="ln"></div></div>
+
+      <div class="astep">
+        <div class="num">6</div>
+        <div class="body">
+          <p class="ttl"><span class="emoji">&#128421;</span> The officer sees it all on screen</p>
+          <p class="what">The answer, its citations, a confidence signal, and a live scoreboard of the checks. A "break it" button injects a bad answer so the audience watches the scoreboard catch it. It also produces a one-page audit report.</p>
+          <div class="eg"><b>In the demo:</b> flip "break it" and the green scoreboard turns red on the failed check, live.</div>
+        </div>
+      </div>
+      <div class="conn"><div class="ln"></div><span>then the verified customer moves on</span><div class="ln"></div></div>
+
+      <div class="astep is-core">
+        <div class="num">&rarr;</div>
+        <div class="body">
+          <p class="ttl"><span class="emoji">&#129309;</span> Handoff to the capstone</p>
+          <p class="what">The verified profile flows into the credit copilot, which reads the economic fields as its Applicant and decides approve, decline or refer.</p>
+          <div class="eg"><b>For Omar:</b> onboarded here, then the capstone uses his verified salary, visa and rent history to make a defensible credit decision.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH & FLOW -->
+  <section class="tab" id="stack">
+    <div class="card">
+      <h2>Tech &amp; flow - click any part to understand it</h2>
+      <p class="dg-hint">This is the whole app as a picture. Each box is one moving part. Click a box and the panel explains what it is, which tool does it, and a real example. Green boxes are the trust layer (the heart of the project).</p>
+      <div class="dg-wrap">
+        <div class="dg-flow" id="dgFlow">
+          <button class="dg-node active" data-k="ui">
+            <span class="ic">&#128421;</span>
+            <span><span class="nm">Officer's screen</span><span class="sub">the bank console the user sees and clicks</span></span>
+            <span class="tech">React</span>
+          </button>
+          <div class="dg-arrow">&#8595;<small>officer runs a case</small></div>
+          <button class="dg-node" data-k="server">
+            <span class="ic">&#9881;&#65039;</span>
+            <span><span class="nm">App server</span><span class="sub">receives the request, runs the steps below, streams progress back</span></span>
+            <span class="tech">Next.js</span>
+          </button>
+          <div class="dg-arrow">&#8595;<small>step 1: find the rules</small></div>
+          <button class="dg-node" data-k="retrieve">
+            <span class="ic">&#128269;</span>
+            <span><span class="nm">Policy search (RAG)</span><span class="sub">turns the case into meaning-numbers, finds the few relevant policy sections</span></span>
+            <span class="tech">transformers.js</span>
+          </button>
+          <div class="dg-arrow">&#8595;<small>step 2: decide, using only those rules</small></div>
+          <button class="dg-node core" data-k="agent">
+            <span class="ic">&#129302;</span>
+            <span><span class="nm">Decision agent</span><span class="sub">writes the cited recommendation; refuses / escalates when needed</span></span>
+            <span class="tech">Claude</span>
+          </button>
+          <div class="dg-arrow">&#8595;<small>step 3: grade that answer</small></div>
+          <button class="dg-node core" data-k="judge">
+            <span class="ic">&#9878;&#65039;</span>
+            <span><span class="nm">Trust judge</span><span class="sub">grades the answer on the rubric, scores it, tags the root cause of any failure</span></span>
+            <span class="tech">Claude</span>
+          </button>
+          <div class="dg-arrow">&#8595;<small>step 4: record it</small></div>
+          <button class="dg-node" data-k="store">
+            <span class="ic">&#128203;</span>
+            <span><span class="nm">Audit log</span><span class="sub">every decision is saved, powering the dashboard, review queue and report</span></span>
+            <span class="tech">in-memory store</span>
+          </button>
+          <div class="dg-arrow" style="opacity:.6">&#8645;<small>the agent &amp; judge call the model</small></div>
+          <button class="dg-node" data-k="claude">
+            <span class="ic">&#9729;&#65039;</span>
+            <span><span class="nm">Claude (the AI model)</span><span class="sub">runs in Anthropic's cloud; the brain behind the agent and the judge</span></span>
+            <span class="tech">Anthropic API</span>
+          </button>
+        </div>
+        <div class="dg-panel" id="dgPanel"><!-- filled by JS --></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>The 5 layers of the stack</h2>
+      <p class="dg-hint">Another way to read the same thing: every tool sits in one of five layers, each with one job.</p>
+      <table>
+        <tr><th>Layer</th><th>Tool</th><th>What it does</th><th>Everyday analogy</th></tr>
+        <tr><td><b>1. Screen</b></td><td>React</td><td>Draws everything the officer sees - queue, document cards, the trust scoreboard.</td><td>The dashboard and buttons in a car.</td></tr>
+        <tr><td><b>2. Framework</b></td><td>Next.js + TypeScript</td><td>Holds the screen and the backend in one project. TypeScript catches data-shape mistakes before the app runs.</td><td>The chassis everything bolts onto.</td></tr>
+        <tr><td><b>3. Brain (AI)</b></td><td>Claude (Anthropic API)</td><td>Writes the cited decision, and in a separate call acts as the judge grading it.</td><td>A senior officer who decides, plus an auditor who double-checks.</td></tr>
+        <tr><td><b>4. Search (RAG)</b></td><td>transformers.js + policy index</td><td>Turns the policy into meaning-numbers locally and finds the few relevant rules per case.</td><td>A librarian who hands you only the 3 pages you need.</td></tr>
+        <tr><td><b>5. Hosting</b></td><td>Git, GitHub, Render</td><td>GitHub stores the code; Render runs it 24/7 at a public link.</td><td>GitHub = the recipe book; Render = the kitchen cooking.</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>How it gets online (deploy pipeline)</h2>
+      <p class="dg-hint">Your code travels from your laptop to a public link in three hops. After the first setup, a single <code>git push</code> repeats hops 2 and 3 automatically.</p>
+      <div class="pipe">
+        <div class="pstep"><b>&#128187; Your laptop</b><span>You edit code and run <code>git commit</code> to save a snapshot.</span></div>
+        <div class="parrow">&#8594;</div>
+        <div class="pstep"><b>&#128025; GitHub</b><span><code>git push</code> uploads the code to the public repo (Mxjoshi/kyc-onboarding-agent). Stores it; does not run it.</span></div>
+        <div class="parrow">&#8594;</div>
+        <div class="pstep"><b>&#9729;&#65039; Render</b><span>Reads render.yaml, runs <code>build</code> then <code>start</code>, and serves the app 24/7 at a public URL.</span></div>
+        <div class="parrow">&#8594;</div>
+        <div class="pstep"><b>&#127760; Live link</b><span>Anyone (judges, recruiters) opens the URL. Works even when your laptop is off.</span></div>
+      </div>
+      <p class="note">The Claude API key is pasted into Render's dashboard as a secret, never into GitHub. That is why the public repo is safe to share.</p>
+    </div>
+  </section>
+
+  <!-- DOCUMENTS -->
+  <section class="tab" id="documents">
+    <div class="card">
+      <h2>Documents the agent uses</h2>
+      <p class="note">All synthetic. The <b>policy</b> is what the agent retrieves and cites. The <b>customer documents</b> are what the agent reads to decide. Click any item to expand it.</p>
+
+      <div class="erzone trust" style="margin-bottom:14px">
+        <div class="zhead"><span class="dot"></span> Why this matters (KYC &amp; AML in plain words)</div>
+        <p style="margin:0 0 8px;font-size:14px"><b>KYC (Know Your Customer)</b> is the bank confirming you really are who you say you are before opening an account: checking your passport, Emirates ID, and visa. <b>AML (Anti Money Laundering)</b> is the bank making sure it is not being used to move criminal or terrorist money: screening your name against sanctions lists and flagging high-risk people.</p>
+        <p style="margin:0 0 8px;font-size:14px"><b>Why banks must do it:</b> it is the law. Regulators (in the UAE, the Central Bank / CBUAE) require it. If a bank onboards the wrong person or misses a sanctions match, it faces huge fines, license risk, and reputational damage. If it wrongly rejects a good customer, it loses business. So every decision must be correct <i>and</i> explainable.</p>
+        <p style="margin:0;font-size:14px"><b>Why it is perfect for this project:</b> a confident-but-wrong AI in KYC is a compliance failure. That is why the agent must cite its source, refuse when unsure, and escalate risky cases, and why the trust layer that proves all this is the whole point.</p>
+      </div>
+
+      <h3>The policy (what the agent cites)</h3>
+      <p class="note">The bank's rulebook for onboarding. It defines who can be onboarded, what documents are required, how AML risk is rated, and when a case must go to a human. The agent may only answer from this, and must cite the exact section.</p>
+      <details class="exp">
+        <summary>Acme Bank UAE - KYC and AML Policy (v1.0)</summary>
+        <div class="expbody">
+          <p class="note">9 sections. Each section is one searchable chunk, so answers can cite an exact section. A deliberate gap is built in (remote/tourist/crypto onboarding is NOT covered) so the refusal demo works.</p>
+          <pre class="doc">Acme Bank UAE - Customer Onboarding, KYC and AML Policy (v1.0)
+SYNTHETIC DOCUMENT - NOT REAL. Acme Bank is a fictional UAE bank.
+
+Section 1. Purpose and scope
+1.1 This policy sets the rules for onboarding new individual customers to Acme Bank in the UAE.
+1.2 It covers identity verification (KYC), anti money laundering checks (AML), required documents, risk rating, and when a case must be escalated to a human officer.
+1.3 It applies to all onboarding officers and to any assistant tool that supports them.
+
+Section 2. Definitions
+2.1 Resident: an individual holding a valid UAE residence visa and Emirates ID.
+2.2 Non-resident: an individual without a UAE residence visa.
+2.3 Newcomer: a resident whose UAE residence began within the last 24 months.
+2.4 PEP (politically exposed person): an individual entrusted with a prominent public function.
+
+Section 3. Customer categories
+3.1 Acme Bank onboards UAE residents and non-resident individuals who visit a branch in person.
+3.2 Each customer must be placed in exactly one category before any account is opened.
+3.3 Newcomers are onboarded under the resident rules in Section 4.2, with the AML attention in Section 6.
+
+Section 4. Required documents
+4.1 General: every applicant must present a valid passport. The passport must not be expired.
+4.2 Residents: in addition to the passport, a resident must present (a) a valid Emirates ID, (b) a valid UAE residence visa, and (c) proof of UAE address.
+4.3 Non-residents: in addition to the passport, a non-resident must present a proof of overseas address and a reference letter from an existing bank.
+4.4 Minimum age: the applicant must be at least 18 years old. Applicants under 18 cannot be onboarded.
+4.5 Address verification: UAE address is verified by a tenancy contract (Ejari) or a recent utility bill in the applicant's name. Overseas address is verified by a recent utility bill or bank statement.
+4.6 Document validity: any document presented must be valid (not expired) on the date of onboarding.
+
+Section 5. Identity verification
+5.1 The name and date of birth on the passport, Emirates ID and visa must match.
+5.2 If the documents do not match, the case must be escalated to a human officer (Section 7).
+5.3 The Emirates ID number must be recorded and stored in masked form.
+
+Section 6. AML risk rating
+6.1 Every applicant is assigned a risk band of low, medium or high before onboarding.
+6.2 Low risk: a salaried resident from a non-sanctioned country, employed by a known employer, with no PEP status and no sanctions match.
+6.3 Medium risk: self-employed applicants, or applicants with incomplete employment information. Medium risk customers may be onboarded but require enhanced monitoring.
+6.4 High risk: any applicant with a sanctions match, PEP status, or a connection to a sanctioned country. High risk applicants must be escalated to a human officer and cannot be auto-onboarded.
+6.5 Sanctions screening: every applicant's name must be screened against the sanctions list. A positive match is treated as high risk under Section 6.4.
+
+Section 7. Escalation and human review
+7.1 A case must be escalated to a human officer when any of the following is true:
+(a) documents are missing or do not match (Section 5.2),
+(b) the applicant is high risk (Section 6.4),
+(c) the applicant is a PEP,
+(d) the policy does not clearly cover the applicant's situation.
+7.2 The assistant must never approve a case that meets an escalation trigger.
+7.3 The human officer makes the final onboarding decision in all escalated cases.
+
+Section 8. Decision outcomes
+8.1 Proceed: all required documents are present and valid, identity matches, and risk is low or medium with monitoring. The customer can be onboarded.
+8.2 Request documents: the applicant is otherwise acceptable but one or more required documents are missing or expired. Onboarding pauses until the documents are provided.
+8.3 Escalate: any escalation trigger in Section 7.1 applies. The case goes to a human officer.
+8.4 The assistant must state which outcome applies and cite the section that supports it.
+
+Section 9. Record keeping and audit
+9.1 For every onboarding decision, Acme Bank records the documents seen, the risk band, the outcome, and the policy sections cited.
+9.2 Records must be retained for at least five years and be available for audit.
+9.3 Every decision must be explainable: a human must be able to see why the outcome was reached.
+
+NOTE: remote or online onboarding, tourist accounts opened without a branch visit, and virtual asset or crypto customers are NOT covered by this version. Questions about those should be refused and escalated, per Section 7.1(d).</pre>
+        </div>
+      </details>
+
+      <h3>Customer documents - Omar (the "proceed" case)</h3>
+      <details class="exp">
+        <summary>Passport</summary>
+        <div class="expbody"><p class="note"><b>What it proves:</b> identity and nationality. <b>Why needed:</b> every applicant must present a valid passport (policy Section 4.1). It is the base proof of who the person is.</p><pre class="doc">SYNTHETIC - NOT REAL.
+PASSPORT
+Country code: IND   Passport No: M1234567
+Surname: KHAN   Given names: OMAR
+Nationality: INDIAN   Date of birth: 14 MAR 1992   Sex: M
+Place of birth: MUMBAI
+Date of issue: 02 JAN 2021   Date of expiry: 01 JAN 2031
+Authority: GOVT OF INDIA</pre></div>
+      </details>
+      <details class="exp">
+        <summary>Emirates ID</summary>
+        <div class="expbody"><p class="note"><b>What it proves:</b> the person is a legal UAE resident. <b>Why needed:</b> residents must present a valid Emirates ID (Section 4.2a); its number is recorded in masked form (Section 5.3).</p><pre class="doc">SYNTHETIC - NOT REAL.
+UNITED ARAB EMIRATES - RESIDENT IDENTITY CARD
+ID Number: 784-1992-1234567-1
+Name: OMAR KHAN   Nationality: INDIA
+Date of birth: 14/03/1992
+Issuing date: 20/02/2025   Expiry date: 19/02/2027
+Card holder type: Resident</pre></div>
+      </details>
+      <details class="exp">
+        <summary>Residence visa</summary>
+        <div class="expbody"><p class="note"><b>What it proves:</b> the legal right to live in the UAE and how long it is valid. <b>Why needed:</b> residents must present a valid UAE residence visa (Section 4.2b); the name and date of birth must match the passport and Emirates ID (Section 5.1).</p><pre class="doc">SYNTHETIC - NOT REAL.
+UAE RESIDENCE VISA (Employment)
+Full name: OMAR KHAN   Passport No: M1234567   Nationality: INDIA
+Visa type: Employment
+Sponsor: ACME TECHNOLOGIES FZ-LLC   Profession: Software Engineer
+Issue date: 20/02/2025   Expiry date: 19/02/2027</pre></div>
+      </details>
+      <details class="exp">
+        <summary>Salary certificate</summary>
+        <div class="expbody"><p class="note"><b>What it proves:</b> employment and income. <b>Why needed:</b> a salaried, employed applicant is lower AML risk (Section 6.2), and these same fields (salary, tenure, employer) are exactly what the capstone credit copilot scores later.</p><pre class="doc">SYNTHETIC - NOT REAL.
+ACME TECHNOLOGIES FZ-LLC (Registered in a UAE free zone)
+SALARY CERTIFICATE   Date: 01 June 2026
+
+This is to certify that Mr. Omar Khan, holding Emirates ID 784-1992-1234567-1,
+has been employed with Acme Technologies FZ-LLC since 01 March 2025 in the
+position of Software Engineer.
+
+Employment status: Employed (full time, permanent)
+Monthly gross salary: AED 22,000
+Job tenure as of this date: 15 months</pre></div>
+      </details>
+      <details class="exp">
+        <summary>Tenancy contract</summary>
+        <div class="expbody"><p class="note"><b>What it proves:</b> the person's UAE address (and a record of on-time rent). <b>Why needed:</b> residents must provide proof of UAE address, verified by a tenancy contract (Ejari) or a utility bill (Sections 4.2c and 4.5). This is the document Layla is missing.</p><pre class="doc">SYNTHETIC - NOT REAL.
+TENANCY CONTRACT (Ejari style summary)
+Tenant: OMAR KHAN   Emirates ID: 784-1992-1234567-1
+Property: Apartment, Dubai Marina
+Annual rent: AED 95,000 (paid in 4 cheques)
+Contract start: 01 March 2025   Contract end: 28 February 2027
+Payment record: All rent cheques cleared on time for the past 15 months.</pre></div>
+      </details>
+
+      <h3>The other test customers</h3>
+      <p class="note">Layla (request-documents case): same as Omar but <b>missing the proof of UAE address</b>. Sara (escalate case): documents present but <b>sanctions match + PEP flag</b>. These drive the other two demo outcomes.</p>
+    </div>
+  </section>
+
+  <!-- GLOSSARY -->
+  <section class="tab" id="glossary">
+    <div class="card">
+      <h2>Trust and evaluation terms</h2>
+      <div class="term"><b>Eval</b> <span class="say">short for evaluation</span>
+        <p>A test that measures how good an AI's answer is. Instead of "looks fine", an eval gives a concrete pass/fail or score against set criteria. Like marking an exam with an answer key.</p>
+        <div class="ex"><b>Example:</b> We ask the agent "what documents does a resident need?" The eval checks the answer against 3 criteria and reports "2 of 3 passed: cited a source yes, refused-when-needed yes, added no extra facts no." That score is the eval.</div></div>
+      <div class="term"><b>Harness</b>
+        <p>The supporting rig of code that runs something automatically and collects the results, so you do not test by hand each time.</p>
+        <div class="ex"><b>Example:</b> Instead of typing 20 questions into the app one by one, the harness runs all 20 automatically overnight and hands you a table of results in the morning.</div></div>
+      <div class="term"><b>Eval harness</b>
+        <p>The two combined: a system that automatically runs many test questions through the AI, grades each answer against the rubric, and reports the scores. It is how we prove the agent behaves, repeatedly and on demand. This is the core of the project.</p>
+        <div class="ex"><b>Example:</b> Our eval harness runs 20 onboarding questions, sends each answer to the LLM judge, and prints "18 of 20 fully passed, 2 failed on missing citations." Run it again after any change and you instantly see if quality went up or down.</div></div>
+      <div class="term"><b>Rubric</b>
+        <p>The list of yes/no checks used to grade an answer. The marking scheme.</p>
+        <div class="ex"><b>Example:</b> Our rubric: (1) Is every claim backed by a cited policy section? (2) Did it refuse when the answer was not in the policy? (3) Did it avoid inventing facts? Each answer is marked yes/no on all three.</div></div>
+      <div class="term"><b>LLM as judge</b>
+        <p>Using a second AI call to grade the first AI's answer against the rubric. The "judge" reads the answer and the checks and reports which passed and which failed.</p>
+        <div class="ex"><b>Example:</b> The agent answers Omar's case. We then send that answer plus the rubric to Claude with the instruction "grade this." Claude replies: "Check 1 pass, Check 2 pass, Check 3 fail, it claimed a fee not found in the cited section."</div></div>
+      <div class="term"><b>Discrimination test</b>
+        <p>Feeding the grader deliberately broken answers to prove it actually catches them. A grader that only passes good answers is not trustworthy until it is shown to reject bad ones.</p>
+        <div class="ex"><b>Example:</b> We hand the judge a planted answer that says "residents need no ID" (false) with a fake citation. If the judge marks it FAIL, the rubric works. If it passes, our grader is broken and we fix it.</div></div>
+      <div class="term"><b>RCA</b> <span class="say">root cause analysis</span>
+        <p>When a check fails, working out why. We tag the cause: bad retrieval, bad generation, or ambiguous input.</p>
+        <div class="ex"><b>Example:</b> An answer is wrong. RCA finds the agent was handed the wrong policy section to begin with, so we tag it "bad retrieval" rather than blaming the writing. That tells us to fix the search, not the prompt.</div></div>
+      <div class="term"><b>Hallucination</b>
+        <p>When an AI states something confidently that is not true or not in the source. The main risk this project is built to catch.</p>
+        <div class="ex"><b>Example:</b> The policy never mentions a salary minimum, but the agent confidently says "applicants need AED 5,000 minimum salary." That invented number is a hallucination.</div></div>
+      <div class="term"><b>Grounding / grounded answer</b>
+        <p>An answer built only from provided source text, not the model's memory. A grounded answer can point to exactly where each statement came from.</p>
+        <div class="ex"><b>Example:</b> "A resident must provide a valid passport and Emirates ID (Section 4.2)." Every part of that sentence traces to the actual policy, so it is grounded.</div></div>
+      <div class="term"><b>Citation</b>
+        <p>The exact source section an answer points to, so a human can verify the claim.</p>
+        <div class="ex"><b>Example:</b> The "(Section 4.2, Required documents)" tag at the end of an answer is the citation. The officer can click it and read the original rule.</div></div>
+      <div class="term"><b>Refusal</b>
+        <p>The agent saying "the policy does not cover this" instead of guessing. Honest refusal is a feature here, not a failure.</p>
+        <div class="ex"><b>Example:</b> Asked "can a tourist open a savings account remotely?" and the policy is silent, the agent replies "the policy does not address this, escalating to a human" rather than making up a yes or no.</div></div>
+    </div>
+
+    <div class="card">
+      <h2>RAG and retrieval terms</h2>
+      <div class="term"><b>RAG</b> <span class="say">retrieval augmented generation</span>
+        <p>The technique of fetching the relevant source text first, then letting the AI write an answer using it. "Retrieve, then generate." It makes the agent answer from real policy instead of memory.</p>
+        <div class="ex"><b>Example:</b> Officer asks about required documents. The app first pulls the 3 policy paragraphs about documents, then asks Claude "answer using only these." That two-step is RAG.</div></div>
+      <div class="term"><b>Chunk / chunking</b>
+        <p>Cutting a long document into small, self-contained pieces (about a section each) so they can be searched and cited individually.</p>
+        <div class="ex"><b>In your project:</b> our KYC/AML policy is split into its 9 sections; each section becomes one chunk like "Section 4. Required documents," small enough to search and cite on its own.</div></div>
+      <div class="term"><b>Embedding</b>
+        <p>A list of numbers that captures the <b>meaning</b> of a piece of text. Picture a giant map where every sentence is a dot, and sentences with similar meaning sit close together, no matter what words they use. What matters is not the numbers themselves but the <b>distance</b> between dots: close means similar meaning. This is what lets us search by meaning instead of exact keywords. We create them locally with transformers.js.</p>
+        <div class="ex"><b>In your project:</b> the officer asks "does Omar need to prove where he lives?" The policy never uses those words, it says "Section 4.5 residential address verification via tenancy contract." Keyword search finds nothing, but the embedding (the dot) for the question lands close to the dot for Section 4.5, so retrieval pulls the right rule anyway and Claude cites it.</div></div>
+      <div class="term"><b>Vector store</b>
+        <p>A small database built to hold embeddings and quickly find the closest ones to a query. Our searchable policy library.</p>
+        <div class="ex"><b>In your project:</b> we load all 9 policy chunk-embeddings into the store once. At decision time it returns the most relevant few (the top 7 for a case) in milliseconds.</div></div>
+      <div class="term"><b>Retrieval</b>
+        <p>The step of pulling the few most relevant chunks for a given question, to hand to the AI.</p>
+        <div class="ex"><b>Example:</b> For "documents for a resident", retrieval returns Sections 4.1, 4.2 and 4.5, and ignores the other 117 chunks.</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Agent and tooling terms</h2>
+      <div class="term"><b>Agent / agentic</b>
+        <p>An AI that does not just chat but takes steps to complete a task: retrieve, check, decide, escalate. "Agentic" means it acts toward a goal.</p>
+        <div class="ex"><b>Example:</b> For Omar, the agent retrieves policy, checks each required document, notices the visa is valid, decides "proceed", and writes the verified profile. That sequence of actions is agentic.</div></div>
+      <div class="term"><b>MCP</b> <span class="say">model context protocol</span>
+        <p>A standard way to expose your app's functions as tools that an AI host (like Claude) can call. Optional bonus.</p>
+        <div class="ex"><b>Example:</b> With an MCP wrapper, you could ask Claude directly "onboard customer Omar" and it would call our app's function and return the cited result, no separate website needed.</div></div>
+      <div class="term"><b>API</b> <span class="say">application programming interface</span>
+        <p>A way for one program to call another.</p>
+        <div class="ex"><b>Example:</b> Our app uses the Anthropic API to send the question and policy chunks to Claude and get the written answer back.</div></div>
+    </div>
+
+    <div class="card">
+      <h2>The tech stack (what we build it with)</h2>
+      <div class="term"><b>Next.js</b> <span class="say">"next jay-ess"</span>
+        <p>A web framework for building both the screens and the backend of a web app in one project. We use it so this app matches your capstone and can connect later. (Built on React.)</p>
+        <div class="ex"><b>Example:</b> The onboarding form the officer sees and the code that calls Claude both live in the same Next.js project, the same setup your capstone already uses.</div></div>
+      <div class="term"><b>TypeScript</b> <span class="say">"type script"</span>
+        <p>JavaScript with type checking added. Each piece of data declares its shape, and the tool catches mistakes before the app runs.</p>
+        <div class="ex"><b>Example:</b> We declare aml_risk_band can only be "low", "medium" or "high". If code ever sets it to "unknown", TypeScript flags an error before the app even runs.</div></div>
+      <div class="term"><b>JavaScript</b>
+        <p>The language web browsers run. TypeScript turns into JavaScript to actually run.</p>
+        <div class="ex"><b>Example:</b> When the officer clicks "Check", JavaScript in the browser is what reacts and shows the result.</div></div>
+      <div class="term"><b>React</b>
+        <p>The library for building user interfaces out of reusable components (a form, a button, a scoreboard). Next.js is built on it.</p>
+        <div class="ex"><b>Example:</b> The live rubric "scoreboard" is a React component we can drop onto the page and reuse, just like your capstone reuses its EvalsView.</div></div>
+      <div class="term"><b>transformers.js</b>
+        <p>A library that runs AI models, including the embedding model, locally in JavaScript. Used so embeddings cost nothing and work offline, since Anthropic has no embeddings API.</p>
+        <div class="ex"><b>Example:</b> transformers.js turns each policy chunk into its embedding numbers right on your machine, no extra API key or internet needed.</div></div>
+      <div class="term"><b>Claude / Anthropic API</b>
+        <p>Claude is the AI model (made by Anthropic) that writes the grounded answers and also acts as the eval judge.</p>
+        <div class="ex"><b>Example:</b> Claude writes "Omar may proceed, all documents present (Section 4.2)" and, in a separate call, also grades that very answer as the judge.</div></div>
+      <div class="term"><b>Schema</b>
+        <p>The blueprint of our data: what we store and the shape each field must take.</p>
+        <div class="ex"><b>Example:</b> The CustomerProfile schema says it must have a full_name (text), age_years (number) and kyc_status (one of four values). Anything not matching is rejected.</div></div>
+      <div class="term"><b>Provenance</b>
+        <p>The record of where a value came from.</p>
+        <div class="ex"><b>Example:</b> Omar's salary of AED 22,000 has provenance "from salary-certificate, Monthly gross salary line, verified", so anyone can see why we trust it.</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Build and dev terms</h2>
+      <div class="term"><b>Scaffolding</b>
+        <p>Generating the starter skeleton of an app automatically: the folders, config files, and a runnable empty project, so you don't build all the plumbing by hand.</p>
+        <div class="ex"><b>In your project:</b> we ran one command that created the whole Next.js app (folders, config, a blank page) in seconds. That auto-created starting point is the scaffolding.</div></div>
+      <div class="term"><b>npm</b> <span class="say">node package manager</span>
+        <p>The tool that installs and manages the code libraries a JavaScript project depends on.</p>
+        <div class="ex"><b>In your project:</b> we used npm to install the Anthropic SDK and the embedding library.</div></div>
+      <div class="term"><b>Package / dependency / library</b>
+        <p>A reusable piece of code someone else wrote that your app pulls in. A "dependency" is a package your app depends on to run.</p>
+        <div class="ex"><b>In your project:</b> transformers.js (embeddings) and the Anthropic SDK (Claude) are dependencies.</div></div>
+      <div class="term"><b>Framework</b>
+        <p>A ready-made structure that handles the common plumbing of an app so you only write the parts unique to you.</p>
+        <div class="ex"><b>In your project:</b> Next.js is the framework; it gives us the screens and the backend wiring out of the box.</div></div>
+      <div class="term"><b>Environment variable / .env.local</b>
+        <p>A setting kept outside the code, usually a secret like an API key, stored in a private file the app reads at runtime and that is never committed to Git.</p>
+        <div class="ex"><b>In your project:</b> your Anthropic API key lives in a file called .env.local, kept out of Git so it stays private.</div></div>
+      <div class="term"><b>Script</b>
+        <p>A small standalone program you run once to do a job, separate from the main app.</p>
+        <div class="ex"><b>In your project:</b> build-index turns the policy into the searchable index; test-retrieval checks that search works. Both are scripts.</div></div>
+      <div class="term"><b>Ingestion</b>
+        <p>The one-time step of reading source documents and preparing them for search (chunk, embed, store).</p>
+        <div class="ex"><b>In your project:</b> ingestion split the KYC policy into 9 sections and embedded each one into the index.</div></div>
+      <div class="term"><b>Index (vector store)</b>
+        <p>The saved collection of chunks plus their embeddings that we search at question time.</p>
+        <div class="ex"><b>In your project:</b> policy-index.json holds the 9 policy sections and their meaning-numbers.</div></div>
+      <div class="term"><b>Cosine similarity</b>
+        <p>The math that measures how close two embeddings are. Higher means more similar in meaning. It is how retrieval ranks chunks.</p>
+        <div class="ex"><b>In your project:</b> the test printed scores like 0.59 for the best section, lower for weaker matches.</div></div>
+      <div class="term"><b>Localhost / dev server</b>
+        <p>Running the app on your own machine for testing, reachable in your browser at an address like localhost:3000. It runs only while your terminal is open, and only you can reach it.</p>
+        <div class="ex"><b>In your project:</b> <code>npm run dev</code> opens the app at localhost:3000 so you can try changes. Close the terminal and it stops. The live deployed link (below) is the opposite: always on, reachable by anyone.</div></div>
+      <div class="term"><b>Git</b>
+        <p>A version-control tool that tracks every change to your code over time, so you can save snapshots (commits), undo, and share the project.</p>
+        <div class="ex"><b>In your project:</b> each set of changes is saved as a commit; the secret .env.local file is deliberately kept out of Git so your API key never leaves your machine.</div></div>
+      <div class="term"><b>GitHub</b>
+        <p>An online home for Git projects. It stores your code in the cloud so a host can read it and deploy it. GitHub stores code; it does not run it.</p>
+        <div class="ex"><b>In your project:</b> the code lives at github.com/Mxjoshi/kyc-onboarding-agent (public, so recruiters can read it). Pushing new code there triggers the host to redeploy.</div></div>
+      <div class="term"><b>Host / deploy</b>
+        <p>To deploy is to put your app on a host: a computer in the cloud that runs your code 24/7 and gives it a public web address. This is what turns localhost into a link anyone can open.</p>
+        <div class="ex"><b>In your project:</b> we deploy to Render, which runs the app and gives you a link like kyc-onboarding-agent.onrender.com to submit. It stays live even when your laptop is off.</div></div>
+      <div class="term"><b>Render</b>
+        <p>The cloud host we use. It runs a real, always-on Node server (not short-lived serverless functions), which this app needs because its audit log lives in memory and its search model loads into that one server.</p>
+        <div class="ex"><b>In your project:</b> Render reads render.yaml in the repo, runs <code>npm run build</code> then <code>npm run start</code>, and you paste the API key into Render's dashboard (never into Git).</div></div>
+      <div class="term"><b>Build (production build)</b>
+        <p>Compiling the app into an optimized version ready to run on a server. The build step also type-checks the whole project and fails if anything is wrong, catching mistakes before they go live.</p>
+        <div class="ex"><b>In your project:</b> <code>npm run build</code> caught two type errors that the dev server had ignored; we fixed them before deploying.</div></div>
+    </div>
+
+    <div class="card">
+      <h2>UAE banking terms</h2>
+      <div class="term"><b>KYC</b> <span class="say">know your customer</span>
+        <p>The checks a bank must do to confirm who a customer is before onboarding them.</p>
+        <div class="ex"><b>Example:</b> Verifying Omar's passport and Emirates ID match and are valid is KYC.</div></div>
+      <div class="term"><b>AML</b> <span class="say">anti money laundering</span>
+        <p>Rules and checks to stop banks being used to launder money, including screening for sanctions and high-risk customers.</p>
+        <div class="ex"><b>Example:</b> Checking Omar's name against a sanctions list and rating his risk as "low" is AML.</div></div>
+      <div class="term"><b>PEP</b> <span class="say">politically exposed person</span>
+        <p>Someone who holds or recently held a prominent public position (minister, senior official, senior judge, head of a state-owned company), plus their close family and associates. Not a criminal, but their access to public money and influence means higher bribery/corruption risk, so banks apply extra scrutiny. A PEP is not auto-onboarded; a human does enhanced due diligence first.</p>
+        <div class="ex"><b>In your project:</b> Sara is flagged PEP, so the agent escalates to a human (Section 6.4 / 7.1) instead of deciding alone. Omar and Layla are not PEPs.</div></div>
+      <div class="term"><b>Risk band</b> <span class="say">low / medium / high</span>
+        <p>The overall AML risk rating for an applicant. Low = onboard normally; medium = onboard but with extra monitoring; high = escalate to a human. Driven by factors like employment, country, sanctions, and PEP status.</p>
+        <div class="ex"><b>In your project:</b> Omar and Layla are low risk; Sara is high (sanctions match + PEP), which forces escalation.</div></div>
+      <div class="term"><b>Enhanced due diligence (EDD) / enhanced monitoring</b>
+        <p>The deeper, ongoing checks applied to higher-risk customers, for example verifying source of wealth and reviewing their activity more closely over time.</p>
+        <div class="ex"><b>In your project:</b> the policy says medium-risk customers may be onboarded but require enhanced monitoring (Section 6.3); high-risk (Sara) goes to a human first.</div></div>
+      <div class="term"><b>Sanctions screening</b>
+        <p>Checking an applicant's name against official sanctions lists (UN, US, EU, UAE) of people and entities banned from the financial system, usually for links to terrorism, crime, or money laundering. A positive match is high risk and must go to a human, never auto-onboarded. Onboarding a sanctioned person is a serious legal breach with heavy fines.</p>
+        <div class="ex"><b>In your project:</b> Sara's screening returns a positive match, so the agent escalates and cites Section 6.5 / 6.4 instead of deciding alone. Omar and Layla are clear.</div></div>
+      <div class="term"><b>CBUAE</b> <span class="say">Central Bank of the UAE</span>
+        <p>The UAE's banking regulator. Its Feb 2026 Guidance Note sets expectations for trustworthy AI in finance.</p>
+        <div class="ex"><b>Example:</b> Our one-page audit report maps each agent behavior (citations, human oversight) to a CBUAE expectation.</div></div>
+      <div class="term"><b>AECB</b> <span class="say">Al Etihad Credit Bureau</span>
+        <p>The UAE credit bureau. A newcomer has a blank AECB file, the core problem the two apps address.</p>
+        <div class="ex"><b>Example:</b> Omar just arrived, so AECB has no credit history for him, which is why the capstone uses alternative data instead.</div></div>
+      <div class="term"><b>Ejari</b>
+        <p>Dubai's official tenancy registration system. A tenancy contract is used to verify rent history.</p>
+        <div class="ex"><b>Example:</b> Omar's Ejari-style tenancy contract shows 15 months of on-time rent, which becomes his rent_history value.</div></div>
+    </div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section class="tab" id="progress">
+    <div class="card">
+      <h2>Success criteria (yes / no)</h2>
+      <ul class="check">
+        <li>Every answer cites the exact policy section it used <span class="pill ok">met</span></li>
+        <li>Refuses instead of guessing when policy is silent <span class="pill ok">met</span></li>
+        <li>Escalates risky profiles to a human, never auto-approve <span class="pill ok">met</span></li>
+        <li>LLM judge returns a score and lists failed checks <span class="pill ok">met</span></li>
+        <li>Discrimination test catches a planted hallucination <span class="pill ok">met - 3/3</span></li>
+        <li>Each failure gets a root cause tag <span class="pill ok">met</span></li>
+        <li>One-page audit report mapped to the CBUAE Guidance Note <span class="pill todo">to build</span></li>
+        <li>Runs end to end with a UI (scoreboard + break-it toggle) <span class="pill ok">met</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Progress</h2>
+      <ul class="check">
+        <li>00 &nbsp; Research finalized <span class="pill ok">done</span></li>
+        <li>01 &nbsp; Problem / Idea <span class="pill ok">done</span></li>
+        <li>02 &nbsp; PRD (stack: Next.js/TS to match capstone) <span class="pill ok">done</span></li>
+        <li>03 &nbsp; Data schema + shared layer <span class="pill ok">done</span></li>
+        <li>04 &nbsp; Synthetic policy docs + retrieval <span class="pill ok">done</span></li>
+        <li>05 &nbsp; Grounded answers + cite + refuse / escalate <span class="pill ok">done</span></li>
+        <li>06 &nbsp; Trust layer (rubric + judge + discrimination) <span class="pill ok">done - 3/3 caught</span></li>
+        <li>07 &nbsp; RCA tags (bad_retrieval / bad_generation) <span class="pill ok">done</span></li>
+        <li>08 &nbsp; UI - multi-view console (Dashboard, Onboarding, Review queue, Audit, Report) <span class="pill ok">done</span></li>
+        <li>09 &nbsp; CBUAE report (in-app) + demo guide <span class="pill ok">done</span></li>
+        <li>10 &nbsp; Deploy - code on GitHub (public) + Render blueprint ready <span class="pill prog">live URL: 1 click in Render left</span></li>
+      </ul>
+      <p class="note">Code is public at github.com/Mxjoshi/kyc-onboarding-agent. Production build verified (type-checks pass, full pipeline runs). render.yaml + DEPLOY.md added. Last step is a one-time Render Blueprint sign-in (browser) to get the live link, then paste the URL here.</p>
+      <p class="note">Sheet columns: PRD (D), Data Schema (E), AI features + Creds (F), MVP/UI (G), EVALS (H) are Done. Git/Live (I): code pushed, hosting blueprint ready, awaiting the Render click-through for the public URL.</p>
+      <p class="note">Synthetic data only. No real customer or company documents, ever.</p>
+    </div>
+  </section>
+
+</main>
+
+<div class="struct">
+  <details class="tree">
+    <summary>Show the full project structure</summary>
+<pre>buildathon/
+├── <span class="fc">overview.html</span>            this page
+├── <span class="fc">README.md</span>                thesis, rules, progress
+├── <span class="fc">PLAN.md</span>                  our outcome-first plan
+│
+├── 00-research/            deep research on UAE direction
+│   └── uae-direction-research.md
+├── 01-problem-idea/        the problem and idea
+│   └── problem-and-idea.md
+├── 02-prd/                 the product spec
+│   └── PRD.md
+├── 03-data-schema/         tables and fields
+│   └── data-schema.md
+├── 04-ai-features/         (next) retrieval + grounded answers
+├── 05-build/               (next) the Next.js app
+├── 06-deploy/              push to Git, make it live
+├── 07-evals/               rubric, judge, discrimination test
+├── 08-rca/                 root cause analysis
+├── 09-demo/                demo script + narrative
+│   └── newcomer-journey-narrative.md
+│
+├── sample-documents/       the policy the agent reads
+│   └── acme-bank-kyc-aml-policy.md   (has a deliberate gap)
+│
+└── newcomer-shared/        THE SHARED LAYER (both apps read this)
+    ├── customer-profile.schema.ts    the connector (TypeScript)
+    ├── README.md
+    ├── reference/          shared reference docs (to add)
+    └── customers/
+        ├── omar/           PROCEED case
+        │   ├── profile.json
+        │   └── documents/  passport, emirates-id, visa, salary, tenancy
+        ├── layla/          REQUEST DOCUMENTS case (missing address)
+        │   └── profile.json
+        └── sara/           ESCALATE case (sanctions + PEP)
+            └── profile.json
+<span class="note">Synthetic data only. No real customer or company documents.</span></pre>
+  </details>
+</div>
+
+<script>
+  const nav = document.getElementById('tabnav');
+  const struct = document.querySelector('.struct');
+  nav.addEventListener('click', function(e){
+    const btn = e.target.closest('button'); if(!btn) return;
+    const id = btn.dataset.tab;
+    nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+    document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('show', s.id===id));
+    // hide the project-structure footer on the data model tab (it has its own schema expander)
+    if(struct) struct.style.display = (id === 'model') ? 'none' : '';
+    window.scrollTo({top:0,behavior:'instant'});
+  });
+
+  // Interactive tech & flow diagram
+  const DG = {
+    ui:{icon:'🖥️',title:'Officer’s screen',tech:'React',
+      role:'The screen the bank officer actually uses: the work queue of applicants, each customer’s document cards, the decision banner, and the live trust scoreboard. It is built from reusable React components.',
+      eg:'The green/red scoreboard that flips the moment you press “break it” is one React component re-drawing itself.'},
+    server:{icon:'⚙️',title:'App server',tech:'Next.js',
+      role:'The backend that ties everything together. When the officer runs a case, this server receives the request, runs the search → decide → grade → record steps, and streams the progress back to the screen live. Next.js lets the screen and this backend live in one project.',
+      eg:'The little stepper that shows “retrieving… deciding… grading… done” is this server reporting each real step as it happens.'},
+    retrieve:{icon:'🔍',title:'Policy search (RAG)',tech:'transformers.js',
+      role:'This is RAG – retrieval-augmented generation. Instead of letting the AI answer from memory, we first FIND the right rules and feed only those to it. transformers.js runs a small AI model on our own server that turns text into “meaning-numbers” (an embedding). We compare the case’s numbers to every policy section’s numbers and keep the closest few. No keyword matching – it matches by meaning.',
+      eg:'For Omar, the case “resident, all documents present, no sanctions” pulls the document-requirement and AML-risk sections and ignores the rest of the policy.'},
+    agent:{icon:'🤖',title:'Decision agent',tech:'Claude',
+      role:'Claude reads ONLY the few policy sections that search handed it, plus the customer’s documents, and writes a recommendation – proceed, request documents, or escalate – with the exact section cited for every claim. If the policy does not cover the case it refuses instead of guessing; risky cases go to a human.',
+      eg:'“Proceed. Passport, Emirates ID and valid visa present, AML risk low (Section 4.2, Section 6.1).” Every claim carries its source.'},
+    judge:{icon:'⚖️',title:'Trust judge',tech:'Claude',
+      role:'A SECOND, independent Claude call that grades the first answer against a 4-point rubric (is every claim cited? did it refuse when it should? any invented facts? correct action?). It returns a score and, if a check fails, tags the root cause (bad retrieval vs bad generation). This is the heart of the project: proof the answer can be trusted.',
+      eg:'For Omar it marks all 4 checks passed = 100%. When we plant a fake “no ID needed” answer, the judge correctly fails it – proving the grader really catches mistakes.'},
+    store:{icon:'📋',title:'Audit log',tech:'in-memory store',
+      role:'Every decision (case, outcome, trust score, root-cause tag, officer action, time) is recorded. This single log powers the Dashboard stats, the Review queue, the Audit trail and the CBUAE report. It lives in the server’s memory, which is why the app needs one always-on server (and resets if that server restarts).',
+      eg:'After you run a few cases, the Report tab can filter and export them to CSV – all read from this log.'},
+    claude:{icon:'☁️',title:'Claude (the AI model)',tech:'Anthropic API',
+      role:'The actual AI model, running in Anthropic’s cloud. Both the decision agent and the trust judge are really calls to Claude over the internet – same model, two different jobs. Your API key (kept secret) authorises these calls.',
+      eg:'One call asks Claude to decide Omar’s case; a separate call asks Claude to grade that decision. Two prompts, one model.'}
+  };
+  const dgFlow = document.getElementById('dgFlow');
+  const dgPanel = document.getElementById('dgPanel');
+  function dgRender(k){
+    const d = DG[k]; if(!d) return;
+    dgFlow.querySelectorAll('.dg-node').forEach(n=>n.classList.toggle('active', n.dataset.k===k));
+    dgPanel.innerHTML =
+      '<div class="pt">'+d.icon+' '+d.title+'</div>'+
+      '<span class="ptech">'+d.tech+'</span>'+
+      '<div class="pr">What it is</div><p class="pv">'+d.role+'</p>'+
+      '<div class="peg"><b>Example:</b> '+d.eg+'</div>';
+  }
+  if(dgFlow){
+    dgFlow.addEventListener('click', function(e){
+      const n = e.target.closest('.dg-node'); if(!n) return;
+      dgRender(n.dataset.k);
+    });
+    dgRender('ui');
+  }
+</script>
+</body>
+</html>
