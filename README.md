@@ -9,8 +9,9 @@ Built solo as the onboarding companion to the Newcomer Credit Decisioning Copilo
 of one newcomer journey (this onboards the customer, the capstone decides their credit). Goal: a
 working, evaluated MVP.
 
-**Watch:** a 90-second animated [pitch film](04-evaluate-and-ship/pitch-film/) walks through the whole
-product, from the newcomer at the door to the trust layer catching a bad answer on screen.
+**▶ [Watch the 90-second pitch film](https://mxjoshi.github.io/kyc-onboarding-agent/)** (plays in the
+browser): an animated walkthrough from the newcomer at the door to the trust layer catching a bad
+answer on screen. ([source and MP4](04-evaluate-and-ship/pitch-film/))
 
 > **The gap we fill:** the UAE is about 88% expat, and a new arrival has no local credit history and a
 > thin document file. Onboarding them is high stakes and mostly manual, and a wrong call is a
